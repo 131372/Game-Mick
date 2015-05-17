@@ -1,0 +1,5 @@
+game
+	-games
+		-id,game_id,turn,move
+	-rooms
+		-Owner,Guest,game_id
