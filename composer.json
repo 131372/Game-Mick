@@ -1,0 +1,26 @@
+{
+    "require-dev": {
+        "facebook/webdriver": "dev-master",
+        "Mockery/Mockery": ">=0.7.2",
+        "davedevelopment/hamcrest-php": "dev-master"
+    }
+    ,
+    "autoload": {
+       
+    }
+    ,
+    "nono": {
+        "require-dev": {   
+            "mikey179/vfsStream": "~1",
+             "ext-pcntl": "*",
+        "phpunit/php-invoker": "*",
+            "phpunit/dbunit": ">=1.2"
+            
+           
+        }
+        ,
+        "autoload": {
+             "classmap": ["./vendor/mikey179/vfsStream/src/main/php"]
+        }
+    }
+}

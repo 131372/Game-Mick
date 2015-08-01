@@ -1,0 +1,15 @@
+/nbproject/private/
+/COVERAGE
+/vendor/
+/src/game/
+/src/qttt/
+/src/ttt/
+/src/example/tests/jasmine
+/src/ttt/tests/jasmine
+/src/game/tests/jasmine
+/src/dbInit.php
+/phpunit.phar
+/phpunit-skelgen.phar
+/composer.phar
+/composer.lock
+/selenium-server-standalone-2.45.0.jar

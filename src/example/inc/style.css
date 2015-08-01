@@ -1,0 +1,112 @@
+body{
+	background: #000; 
+	color: #888;
+	font-family: Sans-serif, Arial;
+	font-size: 80%;
+}
+
+#current{
+	text-align: center;
+	position: absolute;
+	border: 1px #777 solid;
+	border-radius: 5px;
+	padding: 5px;
+	background: white;
+	color: #444;
+}
+
+#overlay{
+	position: fixed;
+	height: 50px;
+	width: 400px;
+	color: white;
+	
+	font-size: 28pt;
+	text-align: center;
+	padding: 10px 0 0 0;
+	
+	top: 0;
+	left: 50%;
+	margin-left: -200px;
+}
+
+h3{
+	display: inline;
+	margin: 0;
+	font-size: 34pt;
+}
+
+h2{
+	display: inline;
+	margin: 0;
+	font-size: 40pt;
+}
+
+h3:hover{
+	color: red;
+	cursor: pointer;
+}
+
+#field{	
+	border: 1px #999 solid;
+	padding: 20px;
+	background: #fff;
+	
+	overflow: hidden;
+	
+	margin: 100px auto;
+	width: 0px;
+	height: 0px;
+	
+	border-radius: 8px;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	
+	box-shadow: 0px 1px 3px #777;
+	-moz-box-shadow: 0px 1px 3px #777;
+	-webkit-box-shadow: 0px 1px 3px #777;
+}
+
+#field .hok{
+	opacity: 1;
+	width: 108px;
+	height: 108px;
+	border: 1px #999 solid;
+	float: left;
+	margin: 2px;
+	padding: 5px;
+	
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	
+	background: #ccc;
+	
+	background-position: center center;
+	background-repeat: no-repeat;
+}
+
+#field .hok:hover{
+	cursor: pointer;
+}
+
+#field .zet{
+	float: left;
+	padding: 5px 10px;
+	
+	background: #eee;
+	border: 1px solid #888;
+	margin: 3px 0 0 3px;
+	
+	color: white;
+	font-weight: bold;
+	
+	border-radius: 3px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+}
+
+.clear{
+	clear:both;
+	color: #2d2d2d;
+}

@@ -1,0 +1,3 @@
+var logic = {
+    name: 'logic'
+}
