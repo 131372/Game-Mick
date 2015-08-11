@@ -34,12 +34,6 @@
 		button{
 			width:200px;
 		}
-		
-		#nee{
-			width:100px;
-			height:100px;
-			border:solid pink 5px;
-		}
 		</style>
 		<!-- span doesn't work :( (yet)--->
     </head> 
@@ -51,6 +45,7 @@
             header("Location: login.php");
         }
         $name = $_SESSION['name'];
+		$owner= $_SESSION['owner'];
         $game_id = $_SESSION['game_id'];
         $result = query("SELECT id FROM games WHERE game_id=:game", array(":game" => $game_id), $db);
         $array = array();
@@ -64,11 +59,11 @@
                 if ($row['id'] == $max) {
                     $value = $row['move'];
                     if ($row['turn'] == $name) {
-                        echo "It is your opponent's turn<br>" . $value;
+                        echo "It is your opponent's turn<br>";// . $value;
                         $_SESSION['turn'] = "opponent";
                         break;
                     } else {
-                        echo "It is your turn<br>" . $value;
+                        echo "It is your turn<br>";// . $value;
                         $_SESSION['turn'] = "you";
                         break;
                     }
@@ -87,12 +82,24 @@
 				echo "<div class='tile1' id='$id1'><span id='$id2'></span></div>";
 			}
 			echo "<div class='tile2'></div>";
-			//echo "<br><br>";
+			//create the game board
 		}
         ?>
 
+		<div id="information" style="display:none">
+			<span id="owner"><?php echo $owner;?></span>
+			<span id="name"><?php echo $name;?></span>
+		</div>
+		
         <div id="dummy"></div>
-		<div id='si'>
+		<?php
+			if($name==$owner){
+				echo "<div id='si'>";
+			}
+			else{
+				echo "<div id='si' style='display:none'>";
+			}		//hide the setup interface unless this player is the owner of this room and is thus supposed to setup his side of the board first
+		?>
 			<button onclick="boardSetup.typeChange('f')">place flag</button>
 			<span id="remainingf">remaining:1</span><br>
 			<button onclick="boardSetup.typeChange('b')">place bomb</button>
@@ -117,11 +124,11 @@
 			<span id="remaining9">remaining:1</span><br>
 			<button onclick="boardSetup.typeChange('10')">place marshal(10)</button>
 			<span id="remaining10">remaining:1</span><br>
-			<button>end setup</button>
+			<button onclick="boardSetup.endSetup()">end setup</button>
 		</div>
-		<div id="nee"></div>
+		<button onclick="examine(boardSetup.gameState)">examine</button>
+		<button onclick="send()">send</button>
+		<button onclick="obtain()">obtain</button>
     </body>
 </html>
-
-array[x][y]=arrray(owner,value)
 

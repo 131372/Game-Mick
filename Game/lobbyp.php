@@ -2,7 +2,7 @@
 
 require "db_config.php";
 session_start();
-$name = $_SESSION['name'];
+$_SESSION['owner']=$name = $_SESSION['name'];
 /*if ($name != $_POST['name']) {
     $_SESSION['error'] = "an error has occurrred";
 } else {*/
