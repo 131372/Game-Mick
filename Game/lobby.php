@@ -45,6 +45,9 @@
 		<form action="logout.php" method="post">
 			<input type="submit" value="logout">
 		</form>
+		<form action="AIroom.php" method="post">
+			<input type="submit" value="AI game">
+		</form>
     </body>
 	
     <?php
