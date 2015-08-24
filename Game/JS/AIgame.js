@@ -87,12 +87,11 @@ AI.setup = function(){
 	examine(information.gameState);
 }		
 
-AI.threat=[];
-for(i=0;i<10;i++){
-	AI.threat.push([]);
-}
-
 AI.turn = function(){
+	AI.threat=[];
+	for(i=0;i<10;i++){
+		AI.threat.push([]);
+	}
 	information.turn=true;
 	for(x=0;x<10;x++){
 		for(y=0;y<10;y++){
@@ -107,7 +106,9 @@ AI.turn = function(){
 					else{
 						AI.threat[x][y]=parseInt(information.gameState[x][y]['content']);
 					}
-					AI.threat[x][y]-=AI.findFlagDistance(x,y,"no");
+					AI.threat[x][y]-=AI.findFlagDistance(x,y,"yes");
+					AI.threat[x][y]-=0.5*AI.findFlagDistance(x,y,"semi");
+					AI.threat[x][y]-=0.1*AI.findFlagDistance(x,y,"no");
 					if(information.gameState[x][y]['content']!="b"){
 						AI.threat[x][y]+=AI.surroundingPieces(x,y);
 					}
@@ -123,56 +124,55 @@ AI.surroundingPieces= function(x,y){
 	x2=x-1;
 	y2=y;
 	if(typeof information.gameState[x2]!=="undefined"){
-		threat+=repeat(x2,y2);
+		threat+=repeat(x,y,x2,y2);
 	}
 	x2=x+1;
 	y2=y;
 	if(typeof information.gameState[x2]!=="undefined"){
-		threat+=repeat(x2,y2);
+		threat+=repeat(x,y,x2,y2);
 	}
 	x2=x;
 	y2=y-1;
 	if(typeof information.gameState[x2][y2]!=="undefined"){
-		threat+=repeat(x2,y2);
+		threat+=repeat(x,y,x2,y2);
 	}
 	x2=x;
 	y2=y+1;
 	if(typeof information.gameState[x2][y2]!=="undefined"){
-		threat+=repeat(x2,y2);
+		threat+=repeat(x,y,x2,y2);
 	}
+	return threat;
 }
 
-function repeat(x,y){
+function repeat(xo,yo,x,y){
 	threat=0;
 	x2=x-1;
 	y2=y;
-	if(typeof information.gameState[x2]!=="undefined"){
-		if(information.gameState[x][y]['content']>information.gameState[x2][y2]['content'] && information.gameState[x][y]['owner']==2){
-			threat+=information.gameState[x2][y2]['content'];
-		}
-	}
+	threat+=toRepeat(xo,yo,x2,y2);
 	x2=x+1;
 	y2=y;
-	if(typeof information.gameState[x2]!=="undefined"){
-		if(information.gameState[x][y]['content']>information.gameState[x2][y2]['content'] && information.gameState[x][y]['owner']==2){
-			threat+=information.gameState[x2][y2]['content'];
-		}
-	}
+	threat+=toRepeat(xo,yo,x2,y2);
 	x2=x;
 	y2=y-1;
-	if(typeof information.gameState[x2][y2]!=="undefined"){
-		if(information.gameState[x][y]['content']>information.gameState[x2][y2]['content'] && information.gameState[x][y]['owner']==2){
-			threat+=information.gameState[x2][y2]['content'];
-		}
-	}
+	threat+=toRepeat(xo,yo,x2,y2);
 	x2=x;
 	y2=y+1;
+	threat+=toRepeat(xo,yo,x2,y2);
+	
+	return threat;
+}
+
+function toRepeat(xo,yo,x2,y2){
 	if(typeof information.gameState[x2][y2]!=="undefined"){
-		if(information.gameState[x][y]['content']>information.gameState[x2][y2]['content'] && information.gameState[x][y]['owner']==2){
-			threat+=information.gameState[x2][y2]['content'];
+		if(parseInt(information.gameState[xo][yo]['content']) > parseInt(information.gameState[x2][y2]['content']) && information.gameState[x2][y2]['owner']==2){
+			console.log("werkt");
+			return parseInt(information.gameState[x2][y2]['content']);
+		}
+		else if(parseInt(information.gameState[xo][yo]['content'])==parseInt(information.gameState[x2][y2]['content']) && information.gameState[xo][yo]['owner']=="2"){
+			return 0.5*parseInt(information.gameState[x2][y2]['content']);
 		}
 	}
-	return threat;
+	return 0;
 }
 
 AI.findFlagDistance = function(x,y,clear){
@@ -215,6 +215,35 @@ AI.findFlagDistance = function(x,y,clear){
 					if(distances.length!=0){
 						reach[x2][y2]={distance:Math.min.apply(Math,distances)+1,reachable:true};
 					}
+				}
+				else if(clear=="semi" && information.gameState[x2][y2]['content']!="b" && information.gameState[x2][y2]['content']!="f"){
+					if(parseInt(information.gameState[x][y]['content'])>parseInt(information.gameState[x2][y2]['content']) || information.gameState[x2][y2]['content']==0){
+						distances=[];
+						if(typeof reach[x2-1]!=="undefined"){
+							if(reach[x2-1][y2]["reachable"]){
+								distances.push(reach[x2-1][y2]["distance"]);
+							}
+						}
+						if(typeof reach[x2+1]!=="undefined"){
+							if(reach[x2+1][y2]["reachable"]){
+								distances.push(reach[x2+1][y2]["distance"]);
+							}
+						}
+						if(typeof reach[x2][y2-1]!=="undefined"){
+							if(reach[x2][y2-1]["reachable"]){
+								distances.push(reach[x2][y2-1]["distance"]);
+							}
+						}
+						if(typeof reach[x2][y2+1]!=="undefined"){
+							if(reach[x2][y2+1]["reachable"]){
+								distances.push(reach[x2][y2+1]["distance"]);
+							}
+						}
+						if(distances.length!=0){
+							reach[x2][y2]={distance:Math.min.apply(Math,distances)+1,reachable:true};
+						}
+					}
+					console.log(reach);
 				}
 			}
 		}
