@@ -107,7 +107,10 @@ AI.turn = function(){
 					else{
 						AI.threat[x][y]=parseInt(information.gameState[x][y]['content']);
 					}
-					AI.threat[x][y]-=AI.findPath(x,y,"no");
+					AI.threat[x][y]-=AI.findFlagDistance(x,y,"no");
+					if(information.gameState[x][y]['content']!="b"){
+						AI.threat[x][y]+=AI.surroundingPieces(x,y);
+					}
 				}
 			}
 		}
@@ -115,7 +118,64 @@ AI.turn = function(){
 	console.log(AI.threat);
 }
 
-AI.findPath = function(x,y,clear){
+AI.surroundingPieces= function(x,y){
+	threat=0;
+	x2=x-1;
+	y2=y;
+	if(typeof information.gameState[x2]!=="undefined"){
+		threat+=repeat(x2,y2);
+	}
+	x2=x+1;
+	y2=y;
+	if(typeof information.gameState[x2]!=="undefined"){
+		threat+=repeat(x2,y2);
+	}
+	x2=x;
+	y2=y-1;
+	if(typeof information.gameState[x2][y2]!=="undefined"){
+		threat+=repeat(x2,y2);
+	}
+	x2=x;
+	y2=y+1;
+	if(typeof information.gameState[x2][y2]!=="undefined"){
+		threat+=repeat(x2,y2);
+	}
+}
+
+function repeat(x,y){
+	threat=0;
+	x2=x-1;
+	y2=y;
+	if(typeof information.gameState[x2]!=="undefined"){
+		if(information.gameState[x][y]['content']>information.gameState[x2][y2]['content'] && information.gameState[x][y]['owner']==2){
+			threat+=information.gameState[x2][y2]['content'];
+		}
+	}
+	x2=x+1;
+	y2=y;
+	if(typeof information.gameState[x2]!=="undefined"){
+		if(information.gameState[x][y]['content']>information.gameState[x2][y2]['content'] && information.gameState[x][y]['owner']==2){
+			threat+=information.gameState[x2][y2]['content'];
+		}
+	}
+	x2=x;
+	y2=y-1;
+	if(typeof information.gameState[x2][y2]!=="undefined"){
+		if(information.gameState[x][y]['content']>information.gameState[x2][y2]['content'] && information.gameState[x][y]['owner']==2){
+			threat+=information.gameState[x2][y2]['content'];
+		}
+	}
+	x2=x;
+	y2=y+1;
+	if(typeof information.gameState[x2][y2]!=="undefined"){
+		if(information.gameState[x][y]['content']>information.gameState[x2][y2]['content'] && information.gameState[x][y]['owner']==2){
+			threat+=information.gameState[x2][y2]['content'];
+		}
+	}
+	return threat;
+}
+
+AI.findFlagDistance = function(x,y,clear){
 	reach=[];
 	for(i=0;i<10;i++){
 		value=[];
@@ -180,7 +240,6 @@ AI.findPath = function(x,y,clear){
 			distances.push(reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1]["distance"]);
 		}
 	}
-	console.log(distances);
 	return Math.min.apply(Math,distances);
 }
 	
