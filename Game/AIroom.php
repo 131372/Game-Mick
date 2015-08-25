@@ -89,6 +89,7 @@
             <button onclick="game.typeChange('10')">place marshal(10)</button>
             <span id="remaining10">remaining:1</span><br>
             <button onclick="game.endSetup()">end setup</button>
+			<button onclick="game.testSetup()">random</button>
         </div>
         <div id="win"></div>
     </body>

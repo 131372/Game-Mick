@@ -87,36 +87,193 @@ AI.setup = function(){
 	examine(information.gameState);
 }		
 
+game.testSetup = function(){
+	AI.stock={ f:1 , b:6 , 1:1 , 2:8 , 3:5 , 4:4 , 5:4 , 6:4 , 7:3 , 8:2 , 9:1 , 10:1};
+	for(x=0;x<10;x++){
+		for(y=6;y<10;y++){
+			finished=false;
+			while(!finished){
+				select = getRandom(1,12);
+				if(select==11){
+					select="b";
+				}
+				if(select==12){
+					select="f";
+				}
+				if(AI.stock[select]>0){
+					if(select=="f"){
+						AI.flagLocation={x:x,y:y};
+					}
+					AI.stock[select]--;
+					information.gameState[x][y]={owner:1,content:select,revealed:"no"};
+					finished=true;
+				}
+			}
+		}
+	}
+	examine(information.gameState);
+}
+
 AI.turn = function(){
 	AI.threat=[];
 	for(i=0;i<10;i++){
-		AI.threat.push([]);
+		value=[];
+		for(i2=0;i2<10;i2++){
+			value.push({threat:0,"bestAbility":"","abilityLocation":{"x":"","y":""}});
+		}
+		AI.threat.push(value);
 	}
 	information.turn=true;
 	for(x=0;x<10;x++){
 		for(y=0;y<10;y++){
 			if(information.gameState[x][y]['owner']==1){
 				if(information.gameState[x][y]['content']=="f"){
-					AI.threat[x][y]=100;
+					AI.threat[x][y]['threat']=100;
 				}
 				else{
 					if(information.gameState[x][y]['content']=="b"){
-						AI.threat[x][y]=5;
+						AI.threat[x][y]['threat']=5;
 					}
 					else{
-						AI.threat[x][y]=parseInt(information.gameState[x][y]['content']);
+						AI.threat[x][y]['threat']=parseInt(information.gameState[x][y]['content']);
 					}
-					AI.threat[x][y]-=AI.findFlagDistance(x,y,"yes");
-					AI.threat[x][y]-=0.5*AI.findFlagDistance(x,y,"semi");
-					AI.threat[x][y]-=0.1*AI.findFlagDistance(x,y,"no");
+					AI.threat[x][y]['threat']-=AI.findFlagDistance(x,y,"yes");
+					AI.threat[x][y]['threat']-=0.5*AI.findFlagDistance(x,y,"semi");
+					AI.threat[x][y]['threat']-=0.1*AI.findFlagDistance(x,y,"no");
 					if(information.gameState[x][y]['content']!="b"){
-						AI.threat[x][y]+=AI.surroundingPieces(x,y);
+						AI.threat[x][y]['threat']+=AI.surroundingPieces(x,y);
+					}
+					abilities=[];
+					for(x2=0;x2<10;x2++){
+						for(y2=0;y2<10;y2++){
+							if(information.gameState[x2][y2]['owner']==2){
+								if(information.gameState[x2][y2]['content']!="b" && information.gameState[x2][y2]['content']!="f"){
+									ability=10;
+									ability-=AI.findDistance(x2,y2,x,y,"yes");
+									ability-=0.5*AI.findDistance(x2,y2,x,y,"semi");
+									ability-=0.1*AI.findDistance(x2,y2,x,y,"no");
+									abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
+								}
+							}
+						}
+					}
+					test=[];
+					for(i=0;i<=abilities.length-1;i++){
+						test.push(abilities[i]["ability"]);
+					}
+					AI.threat[x][y]["bestAbility"]=max(test);
+					for(i=0;i<=abilities.length;i++){
+						if(abilities[i]["ability"]==max(test)){
+							AI.threat[x][y]["abilityLocation"]=ability[i]["location"];
+							break;
+						}
 					}
 				}
 			}
 		}
 	}
 	console.log(AI.threat);
+}
+
+AI.findDistance = function(x2,y2,x,y,clear){
+	reach=[];
+	for(i=0;i<10;i++){
+		value=[];
+		for(i2=0;i2<10;i2++){
+			value.push({distance:"none",reachable:false});
+		}
+		reach.push(value);
+	}
+	reach[x2][y2]={distance:0,reachable:true};
+	memory="";
+	while(memory!=stringify(reach)){
+		memory=stringify(reach);
+		for(x3=0;x3<10;x3++){
+			for(y3=0;y3<10;y3++){
+				if(!reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']==0 && clear=="yes" || !reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']!="wall" && clear=="no"){
+					distances=[];
+					if(typeof reach[x3-1]!=="undefined"){
+						if(reach[x3-1][y3]["reachable"]){
+							distances.push(reach[x3-1][y3]["distance"]);
+						}
+					}
+					if(typeof reach[x3+1]!=="undefined"){
+						if(reach[x3+1][y3]["reachable"]){
+							distances.push(reach[x3+1][y3]["distance"]);
+						}
+					}
+					if(typeof reach[x3][y3-1]!=="undefined"){
+						if(reach[x3][y3-1]["reachable"]){
+							distances.push(reach[x3][y3-1]["distance"]);
+						}
+					}
+					if(typeof reach[x3][y3+1]!=="undefined"){
+						if(reach[x3][y3+1]["reachable"]){
+							distances.push(reach[x3][y3+1]["distance"]);
+						}
+					}
+					if(distances.length!=0){
+						reach[x3][y3]={distance:Math.min.apply(Math,distances)+1,reachable:true};
+					}
+				}
+				else if(clear=="semi" && information.gameState[x3][y3]['content']!="b" && information.gameState[x3][y3]['content']!="f"){
+					if(parseInt(information.gameState[x2][y2]['content'])>parseInt(information.gameState[x3][y3]['content']) || information.gameState[x3][y3]['content']==0){
+						distances=[];
+						if(typeof reach[x3-1]!=="undefined"){
+							if(reach[x3-1][y3]["reachable"]){
+								distances.push(reach[x3-1][y3]["distance"]);
+							}
+						}
+						if(typeof reach[x3+1]!=="undefined"){
+							if(reach[x3+1][y3]["reachable"]){
+								distances.push(reach[x3+1][y3]["distance"]);
+							}
+						}
+						if(typeof reach[x3][y3-1]!=="undefined"){
+							if(reach[x3][y3-1]["reachable"]){
+								distances.push(reach[x3][y3-1]["distance"]);
+							}
+						}
+						if(typeof reach[x3][y3+1]!=="undefined"){
+							if(reach[x3][y3+1]["reachable"]){
+								distances.push(reach[x3][y3+1]["distance"]);
+							}
+						}
+						if(distances.length!=0){
+							reach[x3][y3]={distance:Math.min.apply(Math,distances)+1,reachable:true};
+						}
+					}
+				}
+			}
+		}
+	}
+	distances=[];
+	if(typeof reach[x2-1] !== "undefined"){
+		if(reach[x2-1][y2]["reachable"]){
+			distances.push(reach[x2-1][y2]["distance"]);
+		}
+	}
+	if(typeof reach[x2+1] !== "undefined"){
+		if(reach[x2+1][y2]["reachable"]){
+			distances.push(reach[x2+1][y2]["distance"]);
+		}
+	}
+	if(typeof reach[x2][y2-1] !== "undefined"){
+		if(reach[x2][y2-1]["reachable"]){
+			distances.push(reach[x2][y2-1]["distance"]);
+		}
+	}
+	if(typeof reach[x2][y2+1] !== "undefined"){
+		if(reach[x2][y2+1]["reachable"]){
+			distances.push(reach[x2][y2+1]["distance"]);
+		}
+	}
+	if(distances.length==0){
+		return 0;
+	}
+	else{
+		return	Math.min.apply(Math,distances);
+	}
 }
 
 AI.surroundingPieces= function(x,y){
@@ -163,13 +320,15 @@ function repeat(xo,yo,x,y){
 }
 
 function toRepeat(xo,yo,x2,y2){
-	if(typeof information.gameState[x2][y2]!=="undefined"){
-		if(parseInt(information.gameState[xo][yo]['content']) > parseInt(information.gameState[x2][y2]['content']) && information.gameState[x2][y2]['owner']==2){
-			console.log("werkt");
-			return parseInt(information.gameState[x2][y2]['content']);
-		}
-		else if(parseInt(information.gameState[xo][yo]['content'])==parseInt(information.gameState[x2][y2]['content']) && information.gameState[xo][yo]['owner']=="2"){
-			return 0.5*parseInt(information.gameState[x2][y2]['content']);
+	if(typeof information.gameState[x2]!=="undefined"){
+		if(typeof information.gameState[x2][y2]!=="undefined"){
+			if(parseInt(information.gameState[xo][yo]['content']) > parseInt(information.gameState[x2][y2]['content']) && information.gameState[x2][y2]['owner']==2){
+				console.log("werkt");
+				return parseInt(information.gameState[x2][y2]['content']);
+			}
+			else if(parseInt(information.gameState[xo][yo]['content'])==parseInt(information.gameState[x2][y2]['content']) && information.gameState[xo][yo]['owner']=="2"){
+				return 0.5*parseInt(information.gameState[x2][y2]['content']);
+			}
 		}
 	}
 	return 0;
@@ -243,7 +402,6 @@ AI.findFlagDistance = function(x,y,clear){
 							reach[x2][y2]={distance:Math.min.apply(Math,distances)+1,reachable:true};
 						}
 					}
-					console.log(reach);
 				}
 			}
 		}
@@ -269,7 +427,12 @@ AI.findFlagDistance = function(x,y,clear){
 			distances.push(reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1]["distance"]);
 		}
 	}
-	return Math.min.apply(Math,distances);
+	if(distances.length==0){
+		return 0;
+	}
+	else{
+		return	Math.min.apply(Math,distances);
+	}
 }
 	
 game.typeChange= function(thing){			//change the type of piece you place when clicking a tile
