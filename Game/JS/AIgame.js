@@ -123,6 +123,7 @@ AI.turn = function(){
 		}
 		AI.threat.push(value);
 	}
+	threats=[];
 	information.turn=true;
 	for(x=0;x<10;x++){
 		for(y=0;y<10;y++){
@@ -161,18 +162,26 @@ AI.turn = function(){
 					for(i=0;i<=abilities.length-1;i++){
 						test.push(abilities[i]["ability"]);
 					}
-					AI.threat[x][y]["bestAbility"]=max(test);
-					for(i=0;i<=abilities.length;i++){
-						if(abilities[i]["ability"]==max(test)){
+					console.log(Math.max.apply(null,test));
+					AI.threat[x][y]["threat"]*=test.max;
+					for(i=0;i<abilities.length;i++){
+						if(abilities[i]["ability"]==test.max){
 							AI.threat[x][y]["abilityLocation"]=ability[i]["location"];
 							break;
 						}
 					}
+					threats.push(AI.threat[x][y]["threat"]);
 				}
 			}
 		}
 	}
-	console.log(AI.threat);
+	for(x=0;x<10;x++){
+		for(y=0;y<10;y++){
+			if(AI.threat[x][y]["threat"]==threats.max){
+				console.log("hallo");
+			}
+		}
+	}
 }
 
 AI.findDistance = function(x2,y2,x,y,clear){
@@ -248,24 +257,24 @@ AI.findDistance = function(x2,y2,x,y,clear){
 		}
 	}
 	distances=[];
-	if(typeof reach[x2-1] !== "undefined"){
-		if(reach[x2-1][y2]["reachable"]){
-			distances.push(reach[x2-1][y2]["distance"]);
+	if(typeof reach[x-1] !== "undefined"){
+		if(reach[x-1][y]["reachable"]){
+			distances.push(reach[x-1][y]["distance"]);
 		}
 	}
-	if(typeof reach[x2+1] !== "undefined"){
-		if(reach[x2+1][y2]["reachable"]){
-			distances.push(reach[x2+1][y2]["distance"]);
+	if(typeof reach[x+1] !== "undefined"){
+		if(reach[x+1][y]["reachable"]){
+			distances.push(reach[x+1][y]["distance"]);
 		}
 	}
-	if(typeof reach[x2][y2-1] !== "undefined"){
-		if(reach[x2][y2-1]["reachable"]){
-			distances.push(reach[x2][y2-1]["distance"]);
+	if(typeof reach[x][y-1] !== "undefined"){
+		if(reach[x][y-1]["reachable"]){
+			distances.push(reach[x][y-1]["distance"]);
 		}
 	}
-	if(typeof reach[x2][y2+1] !== "undefined"){
-		if(reach[x2][y2+1]["reachable"]){
-			distances.push(reach[x2][y2+1]["distance"]);
+	if(typeof reach[x][y+1] !== "undefined"){
+		if(reach[x][y+1]["reachable"]){
+			distances.push(reach[x][y+1]["distance"]);
 		}
 	}
 	if(distances.length==0){
