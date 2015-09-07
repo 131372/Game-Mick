@@ -13,79 +13,46 @@ it onto the other player which then places his pieces.
 Pieces are placed by first selecting a piece to place and then clicking a tile to place said piece there. 
 If the tile already contains another piece this piece is removed from the board to be placed again.
 */
-information = new Object();
-game = new Object();
 AI = new Object();
 		
-information.pieces=["",""];
-information.selected="";
-information.gameStage="setup";
-information.stock={ f:1 , b:6 , 1:1 , 2:8 , 3:5 , 4:4 , 5:4 , 6:4 , 7:3 , 8:2 , 9:1 , 10:1};		//the number of available pieces per type
-information.gameState=[];		
 information.playerNumber="1";
 information.turn=true;		//setting up some variables
+information.AIgame=true;
 
 function getRandom(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-for(i=0;i<10;i++){
-	value=[];
-	for(i1=0;i1<10;i1++){
-		value2={owner:0,content:"",revealed:"no"};
-		value.push(value2);
-	}
-	information.gameState.push(value);
-}			//create a blank game board			
-		
-$(function(){
-	$('#x3y5,#x4y5,#x7y5,#x8y5,#x3y6,#x4y6,#x7y6,#x8y6').css('background-color','black');
-	for(i=4;i<=5;i++){
-		for(i2=2;i2<=3;i2++){
-			information.gameState[i2][i]={owner:3,content:"wall",revealed:"no"};
-			information.gameState[i2+4][i]={owner:3,content:"wall",revealed:"no"};
-		}
-	}				//both colour the tiles that are impassable and fill in their data on the game board	
-});						
-
-function stringify(obj){
-	arr="";
-	for(var el of obj){
-		for(var el2 of el){
-			for(var ind in el2){
-				arr+=el2[ind];
-			}
-		}
-	}
-	return arr;
-}		//turn game board into string as to easily check if it is equal to the memory of the game board
+}						
 		
 AI.setup = function(){
 	AI.stock={ f:1 , b:6 , 1:1 , 2:8 , 3:5 , 4:4 , 5:4 , 6:4 , 7:3 , 8:2 , 9:1 , 10:1};
 	for(x=0;x<10;x++){
 		for(y=0;y<4;y++){
-			finished=false;
-			while(!finished){
-				select = getRandom(1,12);
-				if(select==11){
-					select="b";
-				}
-				if(select==12){
-					select="f";
-				}
-				if(AI.stock[select]>0){
-					if(select=="f"){
-						AI.flagLocation={x:x,y:y};
-					}
-					AI.stock[select]--;
-					information.gameState[x][y]={owner:2,content:select,revealed:"no"};
-					finished=true;
-				}
-			}
+			AI.placePiece(x,y);
 		}
 	}
 	examine(information.gameState);
 }		
+
+AI.placePiece = function(x,y){
+	finished=false;
+	while(!finished){
+		select = getRandom(1,12);
+		if(select==11){
+			select="b";
+		}
+		if(select==12){
+			select="f";
+		}
+		if(AI.stock[select]>0){
+			if(select=="f"){
+				AI.flagLocation={x:x,y:y};
+			}
+			AI.stock[select]--;
+			information.gameState[x][y]={owner:2,content:select,revealed:"no"};
+			finished=true;
+		}
+	}
+}
 
 game.testSetup = function(){
 	AI.stock={ f:1 , b:6 , 1:1 , 2:8 , 3:5 , 4:4 , 5:4 , 6:4 , 7:3 , 8:2 , 9:1 , 10:1};
@@ -114,7 +81,7 @@ game.testSetup = function(){
 	examine(information.gameState);
 }
 
-AI.turn = function(){
+information.createThreat = function(){
 	AI.threat=[];
 	for(i=0;i<10;i++){
 		value=[];
@@ -123,267 +90,219 @@ AI.turn = function(){
 		}
 		AI.threat.push(value);
 	}
-	threats=[];
+	AI.threats=[];	
+}
+
+AI.turn = function(){
+	information.createThreat;
 	information.turn=true;
 	for(x=0;x<10;x++){
 		for(y=0;y<10;y++){
-			if(information.gameState[x][y]['owner']==1){
-				if(information.gameState[x][y]['content']=="f"){
-					AI.threat[x][y]['threat']=100;
-				}
-				else{
-					if(information.gameState[x][y]['content']=="b"){
-						AI.threat[x][y]['threat']=5;
-					}
-					else{
-						AI.threat[x][y]['threat']=parseInt(information.gameState[x][y]['content']);
-					}
-					AI.threat[x][y]['threat']-=AI.findFlagDistance(x,y,"yes");
-					AI.threat[x][y]['threat']-=0.5*AI.findFlagDistance(x,y,"semi");
-					AI.threat[x][y]['threat']-=0.1*AI.findFlagDistance(x,y,"no");
-					if(information.gameState[x][y]['content']!="b"){
-						AI.threat[x][y]['threat']+=AI.surroundingPieces(x,y);
-					}
-					abilities=[];
-					for(x2=0;x2<10;x2++){
-						for(y2=0;y2<10;y2++){
-							if(information.gameState[x2][y2]['owner']==2){
-								if(information.gameState[x2][y2]['content']!="b" && information.gameState[x2][y2]['content']!="f"){
-									if(AI.findDistance(x2,y2,x,y,"semi")!=0){
-										if(information.gameState[x2][y2]['content']>information.gameState[x][y]['content']){
-											ability=10;
-											ability-=AI.findDistance(x2,y2,x,y,"yes");
-											ability-=0.5*AI.findDistance(x2,y2,x,y,"semi");
-											ability-=0.1*AI.findDistance(x2,y2,x,y,"no");
-											abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
-										}
-										else if(information.gameState[x2][y2]['content']==information.gameState[x][y]['content']){
-											ability=5;
-											ability-=AI.findDistance(x2,y2,x,y,"yes");
-											ability-=0.5*AI.findDistance(x2,y2,x,y,"semi");
-											ability-=0.1*AI.findDistance(x2,y2,x,y,"no");
-											abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
-										}
-										else{
-											ability=0;
-										}
-									}
-									else{
-										ability=0;
-									}
-								}
-							}
-						}
-					}
-					test=[];
-					for(i=0;i<=abilities.length-1;i++){
-						test.push(abilities[i]["ability"]);
-					}
-					AI.threat[x][y]["threat"]=AI.threat[x][y]["threat"]*Math.max.apply(null,test);
-					for(i=0;i<abilities.length;i++){
-						if(abilities[i]["ability"]==Math.max.apply(null,test)){
-							AI.threat[x][y]["abilityLocation"]=abilities[i]["location"];
-							break;
-						}
-					}
-					threats.push(AI.threat[x][y]["threat"]);
-				}
-			}
+			AI.determineAction(x,y);
 		}
 	}
 	for(x=0;x<10;x++){
 		for(y=0;y<10;y++){
-			if(AI.threat[x][y]["threat"]==Math.max.apply(null,threats)){
-				console.log(AI.threat[x][y]);
-				console.log("x"+x+"y"+y);
-				AI.findPath(AI.threat[x][y]['abilityLocation']['x'],AI.threat[x][y]['abilityLocation']['y'],x,y);
-			}
+			AI.processMove(x,y);
 		}
+	}
+}
+
+AI.processMove = function(x,y){
+	if(AI.threat[x][y]["threat"]==Math.max.apply(null,AI.threats)){
+		move=AI.findPath(AI.threat[x][y]['abilityLocation']['x'],AI.threat[x][y]['abilityLocation']['y'],x,y);
+		information.gameState[move['x']][move['y']]=information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']];
+		information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']]={'content':"",'revealed':"no",'owner':0};
+		examine(information.gameState);
+	}
+}
+
+AI.determineAction = function(x,y){
+	if(information.gameState[x][y]['owner']==1){
+		if(information.gameState[x][y]['content']=="f"){
+			AI.threat[x][y]['threat']=100;
+		}
+		else{
+			if(information.gameState[x][y]['content']=="b"){
+				AI.threat[x][y]['threat']=5;
+			}
+			else{
+				AI.threat[x][y]['threat']=parseInt(information.gameState[x][y]['content']);
+			}
+			AI.threat[x][y]['threat']-=AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"yes");
+			AI.threat[x][y]['threat']-=0.5*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"semi");
+			AI.threat[x][y]['threat']-=0.1*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"no");
+			if(information.gameState[x][y]['content']!="b"){
+				AI.threat[x][y]['threat']+=AI.surroundingPieces(x,y);
+			}
+			AI.abilities=[];
+			for(x2=0;x2<10;x2++){
+				for(y2=0;y2<10;y2++){
+					if(information.gameState[x2][y2]['owner']==2){
+						if(information.trueMoveable(x2,y2)){
+							AI.determineAbility(x,y,x2,y2);
+						}
+					}
+				}
+			}
+			maxAbility=AI.maxAbility();
+			AI.threat[x][y]["threat"]=AI.threat[x][y]["threat"]*maxAbility;
+			for(i=0;i<AI.abilities.length;i++){
+				if(AI.abilities[i]["ability"]==maxAbility){
+					AI.threat[x][y]["abilityLocation"]=AI.abilities[i]["location"];
+					break;
+				}
+			}
+			AI.threats.push(AI.threat[x][y]["threat"]);
+		}
+	}	
+}
+
+AI.determineAbility = function(x,y,x2,y2){
+	if(AI.findDistance(x2,y2,x,y,"semi")!=0){
+		abillity=0;
+		ability-=AI.findDistance(x2,y2,x,y,"yes");
+		ability-=0.5*AI.findDistance(x2,y2,x,y,"semi");
+		ability-=0.1*AI.findDistance(x2,y2,x,y,"no");
+		if(information.gameState[x2][y2]['content']>information.gameState[x][y]['content']){
+			ability+=10;
+			AI.abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
+		}
+		else if(information.gameState[x2][y2]['content']==information.gameState[x][y]['content']){
+			ability+=5;
+			AI.abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
+		}
+		else{
+			ability+=0;
+		}
+	}
+	else{
+		ability=-100;
 	}
 }
 
 AI.findPath = function(x2,y2,x,y){
-	reach=[];
-	for(i=0;i<10;i++){
-		value=[];
-		for(i2=0;i2<10;i2++){
-			value.push({distance:"none",reachable:false});
-		}
-		reach.push(value);
-	}
-	reach[x2][y2]={distance:0,reachable:true};
+	information.createReach(x2,y2);
 	memory="";
-	while(memory!=stringify(reach)){
-		memory=stringify(reach);
+	while(memory!=stringify(information.reach)){
+		memory=stringify(information.reach);
 		for(x3=0;x3<10;x3++){
 			for(y3=0;y3<10;y3++){
-				if(clear=="semi" && information.gameState[x3][y3]['content']!="b" && information.gameState[x3][y3]['content']!="f" && information.gameState[x3][y3]['owner']!=2){
-					if(parseInt(information.gameState[x2][y2]['content'])>parseInt(information.gameState[x3][y3]['content']) || information.gameState[x3][y3]['content']==0){
-						distances=[];
-						if(typeof reach[x3-1]!=="undefined"){
-							if(reach[x3-1][y3]["reachable"]){
-								distances.push(reach[x3-1][y3]["distance"]);
-							}
-						}
-						if(typeof reach[x3+1]!=="undefined"){
-							if(reach[x3+1][y3]["reachable"]){
-								distances.push(reach[x3+1][y3]["distance"]);
-							}
-						}
-						if(typeof reach[x3][y3-1]!=="undefined"){
-							if(reach[x3][y3-1]["reachable"]){
-								distances.push(reach[x3][y3-1]["distance"]);
-							}
-						}
-						if(typeof reach[x3][y3+1]!=="undefined"){
-							if(reach[x3][y3+1]["reachable"]){
-								distances.push(reach[x3][y3+1]["distance"]);
-							}
-						}
-						if(distances.length!=0){
-							reach[x3][y3]={distance:Math.min.apply(Math,distances)+1,reachable:true};
-						}
+				if(information.unownedMoveable(x3,y3 )){
+					if(information.defeatableOrEmpty(x2,y2,x3,y3)){
+						information.determineReach(x3,y3);
 					}
 				}
 			}
 		}
 	}
-	distances=[];
-	if(typeof reach[x-1] !== "undefined"){
-		if(reach[x-1][y]["reachable"]){
-			distances.push(reach[x-1][y]["distance"]);
+	path=[];
+	dist=true;
+	i2=0;
+	while(dist && i2<10000){
+		i2++;
+		information.distances=[];
+		information.action=[];
+		information.determineDistance(x-1,y,1);
+		information.determineDistance(x+1,y,2);
+		information.determineDistance(x,y-1,3);
+		information.determineDistance(x,y+1,4);
+		dist=information.checkRemainingDistance();
+		bool=true;
+		for(i=0;i<4;i++){
+			if(typeof distances[i]!=="undefined"){
+				if(distances[i]==Math.min.apply(null,distances) && bool){
+					switch(action[i]){
+						case 1:
+							x--;
+							break;
+						case 2:
+							x++;
+							break;
+						case 3:
+							y--;
+							break;
+						case 4:
+							y++;
+							break;
+					}
+					console.log("x"+x+"y"+y);
+					path.push({"x":x,"y":y});
+					bool=false;
+				}
+			}
 		}
 	}
-	if(typeof reach[x+1] !== "undefined"){
-		if(reach[x+1][y]["reachable"]){
-			distances.push(reach[x+1][y]["distance"]);
-		}
-	}
-	if(typeof reach[x][y-1] !== "undefined"){
-		if(reach[x][y-1]["reachable"]){
-			distances.push(reach[x][y-1]["distance"]);
-		}
-	}
-	if(typeof reach[x][y+1] !== "undefined"){
-		if(reach[x][y+1]["reachable"]){
-			distances.push(reach[x][y+1]["distance"]);
-		}
-	}
-	if(distances.length==0){
-		return 0;
-	}
-	else{
-		dist=true;
-	}
-	while(dist){
-		if(typeof reach[x-1] !== "undefined"){
-			
-		}
-		if(typeof reach[x+1] !== "undefined"){
-		
-		}
-		if(typeof reach[x][y+1] !== "undefined"){
-		
-		}
-		if(typeof reach[x][y-1] !== "undefined"){
-		
+	return path[path.length-1];
+}
+
+information.determineDistance = function(x,y,action){
+	if(typeof information.reach[x] !== "undefined"){
+		if(typeof information.reach[x][y] !== "undefined"){
+			if(information.reach[x][y]["reachable"]){
+				information.distances.push(information.reach[x][y]["distance"]);
+				information.action.push(action);
+			}
 		}
 	}
 }
 
-AI.findDistance = function(x2,y2,x,y,clear){
-	reach=[];
+information.determineReach = function(x3,y3){
+	information.distances=[];
+	information.findDistance(x3-1,y3);
+	information.findDistance(x3+1,y3);
+	information.findDistance(x3,y3-1);
+	information.findDistance(x3,y3+1);
+	if(distances.length!=0){
+		information.reach[x3][y3]={distance:Math.min.apply(Math,distances)+1,reachable:true};
+	}
+}
+
+information.findDistance = function(x3,y3){
+	if(typeof information.reach[x3]!=="undefined"){
+		if(typeof information.reach[x3][y3]!=="undefined"){
+			if(information.reach[x3][y3]["reachable"]){
+				information.distances.push(information.reach[x3][y3]["distance"]);
+			}
+		}
+	}
+}
+
+information.createReach = function(x2,y2){
+	information.reach=[];
 	for(i=0;i<10;i++){
 		value=[];
 		for(i2=0;i2<10;i2++){
 			value.push({distance:"none",reachable:false});
 		}
-		reach.push(value);
+		information.reach.push(value);
 	}
-	reach[x2][y2]={distance:0,reachable:true};
+	information.reach[x2][y2]={distance:0,reachable:true};
+}
+
+AI.findDistance = function(x2,y2,x,y,clear){
+	information.createReach(x2,y2);
 	memory="";
-	while(memory!=stringify(reach)){
-		memory=stringify(reach);
+	while(memory!=stringify(information.reach)){
+		memory=stringify(information.reach);
 		for(x3=0;x3<10;x3++){
 			for(y3=0;y3<10;y3++){
-				if(!reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']==0 && clear=="yes" || !reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']!="wall" && clear=="no"){
-					distances=[];
-					if(typeof reach[x3-1]!=="undefined"){
-						if(reach[x3-1][y3]["reachable"]){
-							distances.push(reach[x3-1][y3]["distance"]);
-						}
-					}
-					if(typeof reach[x3+1]!=="undefined"){
-						if(reach[x3+1][y3]["reachable"]){
-							distances.push(reach[x3+1][y3]["distance"]);
-						}
-					}
-					if(typeof reach[x3][y3-1]!=="undefined"){
-						if(reach[x3][y3-1]["reachable"]){
-							distances.push(reach[x3][y3-1]["distance"]);
-						}
-					}
-					if(typeof reach[x3][y3+1]!=="undefined"){
-						if(reach[x3][y3+1]["reachable"]){
-							distances.push(reach[x3][y3+1]["distance"]);
-						}
-					}
-					if(distances.length!=0){
-						reach[x3][y3]={distance:Math.min.apply(Math,distances)+1,reachable:true};
-					}
+				if(!information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']==0 && clear=="yes" || !information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']!="wall" && clear=="no"){
+					information.determineReach(x3,y3);
 				}
-				else if(clear=="semi" && information.gameState[x3][y3]['content']!="b" && information.gameState[x3][y3]['content']!="f" && information.gameState[x3][y3]['owner']!=2){
-					if(parseInt(information.gameState[x2][y2]['content'])>parseInt(information.gameState[x3][y3]['content']) || information.gameState[x3][y3]['content']==0){
-						distances=[];
-						if(typeof reach[x3-1]!=="undefined"){
-							if(reach[x3-1][y3]["reachable"]){
-								distances.push(reach[x3-1][y3]["distance"]);
-							}
-						}
-						if(typeof reach[x3+1]!=="undefined"){
-							if(reach[x3+1][y3]["reachable"]){
-								distances.push(reach[x3+1][y3]["distance"]);
-							}
-						}
-						if(typeof reach[x3][y3-1]!=="undefined"){
-							if(reach[x3][y3-1]["reachable"]){
-								distances.push(reach[x3][y3-1]["distance"]);
-							}
-						}
-						if(typeof reach[x3][y3+1]!=="undefined"){
-							if(reach[x3][y3+1]["reachable"]){
-								distances.push(reach[x3][y3+1]["distance"]);
-							}
-						}
-						if(distances.length!=0){
-							reach[x3][y3]={distance:Math.min.apply(Math,distances)+1,reachable:true};
-						}
+				else if(information.unownedMoveable(x3,y3 )){
+					if(information.defeatableOrEmpty(x2,y2,x3,y3)){
+						information.determineReach(x3,y3);
 					}
 				}
 			}
 		}
 	}
-	distances=[];
-	if(typeof reach[x-1] !== "undefined"){
-		if(reach[x-1][y]["reachable"]){
-			distances.push(reach[x-1][y]["distance"]);
-		}
-	}
-	if(typeof reach[x+1] !== "undefined"){
-		if(reach[x+1][y]["reachable"]){
-			distances.push(reach[x+1][y]["distance"]);
-		}
-	}
-	if(typeof reach[x][y-1] !== "undefined"){
-		if(reach[x][y-1]["reachable"]){
-			distances.push(reach[x][y-1]["distance"]);
-		}
-	}
-	if(typeof reach[x][y+1] !== "undefined"){
-		if(reach[x][y+1]["reachable"]){
-			distances.push(reach[x][y+1]["distance"]);
-		}
-	}
+	information.distances=[];
+	information.findDistance(x-1,y);
+	information.findDistance(x+1,y);
+	information.findDistance(x,y-1);
+	information.findDistance(x,y+1);
 	if(distances.length==0){
 		return 0;
 	}
@@ -431,7 +350,6 @@ function repeat(xo,yo,x,y){
 	x2=x;
 	y2=y+1;
 	threat+=toRepeat(xo,yo,x2,y2);
-	
 	return threat;
 }
 
@@ -451,71 +369,71 @@ function toRepeat(xo,yo,x2,y2){
 }
 
 AI.findFlagDistance = function(x,y,clear){
-	reach=[];
+	information.reach=[];
 	for(i=0;i<10;i++){
 		value=[];
 		for(i2=0;i2<10;i2++){
 			value.push({distance:"none",reachable:false});
 		}
-		reach.push(value);
+		information.reach.push(value);
 	}
-	reach[x][y]={distance:0,reachable:true};
+	information.reach[x][y]={distance:0,reachable:true};
 	memory="";
-	while(memory!=stringify(reach)){
-		memory=stringify(reach);
+	while(memory!=stringify(information.reach)){
+		memory=stringify(information.reach);
 		for(x2=0;x2<10;x2++){
 			for(y2=0;y2<10;y2++){
-				if(!reach[x2][y2]["reachable"] && information.gameState[x2][y2]['content']==0 && clear=="yes" || !reach[x2][y2]["reachable"] && information.gameState[x2][y2]['content']!="wall" && clear=="no"){
+				if(!information.reach[x2][y2]["reachable"] && information.gameState[x2][y2]['content']==0 && clear=="yes" || !information.reach[x2][y2]["reachable"] && information.gameState[x2][y2]['content']!="wall" && clear=="no"){
 					distances=[];
-					if(typeof reach[x2-1]!=="undefined"){
-						if(reach[x2-1][y2]["reachable"]){
-							distances.push(reach[x2-1][y2]["distance"]);
+					if(typeof information.reach[x2-1]!=="undefined"){
+						if(information.reach[x2-1][y2]["reachable"]){
+							distances.push(information.reach[x2-1][y2]["distance"]);
 						}
 					}
-					if(typeof reach[x2+1]!=="undefined"){
-						if(reach[x2+1][y2]["reachable"]){
-							distances.push(reach[x2+1][y2]["distance"]);
+					if(typeof information.reach[x2+1]!=="undefined"){
+						if(information.reach[x2+1][y2]["reachable"]){
+							distances.push(information.reach[x2+1][y2]["distance"]);
 						}
 					}
-					if(typeof reach[x2][y2-1]!=="undefined"){
-						if(reach[x2][y2-1]["reachable"]){
-							distances.push(reach[x2][y2-1]["distance"]);
+					if(typeof information.reach[x2][y2-1]!=="undefined"){
+						if(information.reach[x2][y2-1]["reachable"]){
+							distances.push(information.reach[x2][y2-1]["distance"]);
 						}
 					}
-					if(typeof reach[x2][y2+1]!=="undefined"){
-						if(reach[x2][y2+1]["reachable"]){
-							distances.push(reach[x2][y2+1]["distance"]);
+					if(typeof information.reach[x2][y2+1]!=="undefined"){
+						if(information.reach[x2][y2+1]["reachable"]){
+							distances.push(information.reach[x2][y2+1]["distance"]);
 						}
 					}
 					if(distances.length!=0){
-						reach[x2][y2]={distance:Math.min.apply(Math,distances)+1,reachable:true};
+						information.reach[x2][y2]={distance:Math.min.apply(Math,distances)+1,reachable:true};
 					}
 				}
 				else if(clear=="semi" && information.gameState[x2][y2]['content']!="b" && information.gameState[x2][y2]['content']!="f"){
 					if(parseInt(information.gameState[x][y]['content'])>parseInt(information.gameState[x2][y2]['content']) || information.gameState[x2][y2]['content']==0){
 						distances=[];
-						if(typeof reach[x2-1]!=="undefined"){
-							if(reach[x2-1][y2]["reachable"]){
-								distances.push(reach[x2-1][y2]["distance"]);
+						if(typeof information.reach[x2-1]!=="undefined"){
+							if(information.reach[x2-1][y2]["reachable"]){
+								distances.push(information.reach[x2-1][y2]["distance"]);
 							}
 						}
-						if(typeof reach[x2+1]!=="undefined"){
-							if(reach[x2+1][y2]["reachable"]){
-								distances.push(reach[x2+1][y2]["distance"]);
+						if(typeof information.reach[x2+1]!=="undefined"){
+							if(information.reach[x2+1][y2]["reachable"]){
+								distances.push(information.reach[x2+1][y2]["distance"]);
 							}
 						}
-						if(typeof reach[x2][y2-1]!=="undefined"){
-							if(reach[x2][y2-1]["reachable"]){
-								distances.push(reach[x2][y2-1]["distance"]);
+						if(typeof information.reach[x2][y2-1]!=="undefined"){
+							if(information.reach[x2][y2-1]["reachable"]){
+								distances.push(information.reach[x2][y2-1]["distance"]);
 							}
 						}
-						if(typeof reach[x2][y2+1]!=="undefined"){
-							if(reach[x2][y2+1]["reachable"]){
-								distances.push(reach[x2][y2+1]["distance"]);
+						if(typeof information.reach[x2][y2+1]!=="undefined"){
+							if(information.reach[x2][y2+1]["reachable"]){
+								distances.push(information.reach[x2][y2+1]["distance"]);
 							}
 						}
 						if(distances.length!=0){
-							reach[x2][y2]={distance:Math.min.apply(Math,distances)+1,reachable:true};
+							information.reach[x2][y2]={distance:Math.min.apply(Math,distances)+1,reachable:true};
 						}
 					}
 				}
@@ -523,24 +441,24 @@ AI.findFlagDistance = function(x,y,clear){
 		}
 	}
 	distances=[];
-	if(typeof reach[AI.flagLocation["x"]-1] !== "undefined"){
-		if(reach[AI.flagLocation["x"]-1][AI.flagLocation["y"]]["reachable"]){
-			distances.push(reach[AI.flagLocation["x"]-1][AI.flagLocation["y"]]["distance"]);
+	if(typeof information.reach[AI.flagLocation["x"]-1] !== "undefined"){
+		if(information.reach[AI.flagLocation["x"]-1][AI.flagLocation["y"]]["reachable"]){
+			distances.push(information.reach[AI.flagLocation["x"]-1][AI.flagLocation["y"]]["distance"]);
 		}
 	}
-	if(typeof reach[AI.flagLocation["x"]+1] !== "undefined"){
-		if(reach[AI.flagLocation["x"]+1][AI.flagLocation["y"]]["reachable"]){
-			distances.push(reach[AI.flagLocation["x"]+1][AI.flagLocation["y"]]["distance"]);
+	if(typeof information.reach[AI.flagLocation["x"]+1] !== "undefined"){
+		if(information.reach[AI.flagLocation["x"]+1][AI.flagLocation["y"]]["reachable"]){
+			distances.push(information.reach[AI.flagLocation["x"]+1][AI.flagLocation["y"]]["distance"]);
 		}
 	}
-	if(typeof reach[AI.flagLocation["x"]][AI.flagLocation["y"]-1] !== "undefined"){
-		if(reach[AI.flagLocation["x"]][AI.flagLocation["y"]-1]["reachable"]){
-			distances.push(reach[AI.flagLocation["x"]][AI.flagLocation["y"]-1]["distance"]);
+	if(typeof information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]-1] !== "undefined"){
+		if(information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]-1]["reachable"]){
+			distances.push(information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]-1]["distance"]);
 		}
 	}
-	if(typeof reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1] !== "undefined"){
-		if(reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1]["reachable"]){
-			distances.push(reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1]["distance"]);
+	if(typeof information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1] !== "undefined"){
+		if(information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1]["reachable"]){
+			distances.push(information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1]["distance"]);
 		}
 	}
 	if(distances.length==0){
@@ -549,238 +467,17 @@ AI.findFlagDistance = function(x,y,clear){
 	else{
 		return	Math.min.apply(Math,distances);
 	}
-}
-	
-game.typeChange= function(thing){			//change the type of piece you place when clicking a tile
-	information.type=thing;
-};						
+}							
 
-			
-$(function(){
-	$(".tile1").click(function(){
-		game.click()
-	})
-});			//make all game board tiles clickable
-			
-game.click = 	function() {				//process clicks on tiles
-    id2="#"+event.target.id;		//obtain id
-	test=id2.split("");
-	if(test[test.length-1]!="b"){
-		id2=id2+"b";
-	}		//make sure the span inside of the clicked div is targeted, if it isn't already
-	game.click2(id2);
-}
-			
-game.click2= function(id2) {
-	information.id2=id2;
-    information.id=id2.substring(0,id2.length-1);
-	proc=information.id2.split("y");
-	x=proc[0].replace(/\D/g,'');
-	y=proc[1].replace(/\D/g,'');			//obtain x and y positional values
-	if(information.gameStage =="setup"){
-		if((y>6 && information.playerNumber==1 )|| (y<5 && information.playerNumber==2)){		//make sure pieces can only be manipulated on the right side of the board
-			if(information.stock[information.type]>0 && information.gameState[x-1][y-1]['content']==""){	//if tile is empty and you still have pieces available of the desired type...
-				information.gameState[x-1][y-1]={owner:information.playerNumber,content:information.type,revealed:"no"};		//introduce the new piece on the game board
-                examine(information.gameState);			//update the game board visually
-				information.stock[information.type]--;			//reduce amount of remaining pieces
-				$("#remaining"+information.type).html("remaining:"+information.stock[information.type]);	//update remaining pieces counter visually
-			}
-			else{
-				for(i2=1;i2<=10;i2++){
-					if(information.gameState[x-1][y-1]['content']==i2){		//if the tile is already occupied remove that piece
-                        information.gameState[x-1][y-1]={owner:0,content:"",revealed:"no"};		//remove the piece from the game board
-                        examine(information.gameState);		//update the game board visually
-						information.stock[i2]++;						//increase the amount of remaining pieces
-						$("#remaining"+i2).html("remaining:"+information.stock[i2]);		//update the remaining pieces counter visually
-					}
-				}
-				if(information.gameState[x-1][y-1]['content']=="f"){			//same as the previous except for flags
-                    information.gameState[x-1][y-1]={owner:0,content:"",revealed:"no"};
-                    examine(information.gameState);
-					information.stock['f']++;
-					$("#remainingf").html("remaining:"+information.stock['f']);
-				}
-				if(information.gameState[x-1][y-1]['content']=="b"){			//same as the previous except for bombs
-                    information.gameState[x-1][y-1]={owner:0,content:"",revealed:"no"};
-                    examine(information.gameState);
-					information.stock['b']++;
-					$("#remainingb").html("remaining:"+information.stock['b']);
-				}
-			}
-		}
-	}
-    else if(information.gameStage=="main"){
-        if(information.turn){		//if it is this player's turn
-            x2=information.selected[0];
-            y2=information.selected[1];				//obtain positional values of the selected tile
-            if(information.gameState[x-1][y-1]['owner']==information.playerNumber && information.gameState[x-1][y-1]['content']!="b" && information.gameState[x-1][y-1]['content']!="f"){		//if clicking on a owned tile that is neither a flag nor a bomb
-                $("#x"+x+"y"+y).css("background-color","green");			//colour the newly selected tile
-                if(information.selected!=""){		//if a previous tile was already selected
-                    if(information.selected[0]!=x-1 || information.selected[1]!=y-1){
-                        if(information.playerNumber==1){
-                            $("#x"+(information.selected[0]+1)+"y"+(information.selected[1]+1)).css("background-color","blue");
-                        }
-                        else{
-                            $("#x"+(information.selected[0]+1)+"y"+(information.selected[1]+1)).css("background-color","red")
-                        }
-                    }				//change that tiles colour back
-                }
-                information.selected=[x-1,y-1];		//select the new tile
-            }
-            test="yes";
-            if(y2==y-1 && x2<x-1){
-                for(i=x2+1;i<x-1;i++){
-                    if(information.gameState[i][y2]['content']!=""){
-                        test="no";
-                    }
-                }
-            }
-            else if(y2==y-1 && x-1<x2){
-				for(i=x;i<x2;i++){
-					if(information.gameState[i][y2]['content']!=""){
-                        test="no";
-                    }
-                }
-            }
-            else if(x2==x-1 && y-1>y2){
-                for(i=y2+1;i<y-1;i++){
-                    if(information.gameState[x2][i]['content']!=""){
-                        test="no";
-                    }
-                }
-            }
-            else if(x2==x-1 && y-1<y2){
-                for(i=y;i<y2;i++){
-                    if(information.gameState[x2][i]['content']!=""){
-                        test="no";
-                    }
-                }
-            }			//only applicable if trying to move a scout. The path from the scout to its destination must be unobstructed.
-            if((x2==x || x2+2==x) && y2+1==y || x2+1==x && (y2==y || y2+2==y) || (x2==x-1 || y2==y-1) && information.gameState[x2][y2]['content']==2 && test=="yes"){		//if the clicked tile is adjacent to the selected tile or it is an allowed move made by a scout
-				if(information.gameState[x-1][y-1]['owner']==0 && information.selected!=""){		//if the target tile is empty and this player has selected a tile
-                    information.turn=false;			//end this player's turn
-                    information.gameState[x-1][y-1]=information.gameState[x2][y2];		//occupy the target tile
-                    information.gameState[x2][y2]={owner:0,content:"",revealed:"no"};			//empty the selected tile
-                    examine(information.gameState);			//update the game board visually
-                    information.selected="";			//remove the selection
-				}
-				else if(((information.gameState[x-1][y-1]['owner']==1 && information.playerNumber!=1) || (information.gameState[x-1][y-1]['owner']==2 && information.playerNumber!=2)) && information.selected!=""){		//if the target tile is occupied by an opponent and this player has selected a tile
-					game.attack();
-				}
-				setTimeout(function(){AI.turn()},1000);
-			}
-		}
-    }
-}
-			
-game.attack = function(){
-    strengtha = parseInt(information.gameState[x2][y2]['content']);		//determine the strength of the attacker
-    information.selected = "";				//clear the selection
-    information.turn = false;				//end this player's turn
-    if (information.gameState[x - 1][y - 1]['content'] != "b" && information.gameState[x - 1][y - 1]['content'] != "f"){
-        strengthd = parseInt(information.gameState[x - 1][y - 1]['content']);
-    }				//in the case the targeted tile is neither a bomb nor a flag determine its strength
-    if(information.gameState[x - 1][y - 1]['content'] == "b"){
-        if(strengtha==3){
-            strengthd=0;
-        }
-		else{
-			strengthd=11;
-		}
-    }			//if the target tile is a bomb make sure it is stronger than all attackers, except the miner
-    if(information.gameState[x - 1][y - 1]['content'] == "f"){
-        game.endGame(information.playerNumber);
-    }				//if the flag is captured end the game
-    if(strengtha==1 && strengthd==10){
-        strengtha=11;
-    }			//if a spy attacks the marshal make the spy stronger
-	if (strengtha < strengthd){			//if the attacker's strength is lower than the defender's
-        information.pieces[information.playerNumber-1]+=information.gameState[x2][y2]['content'];			//place the attacker's piece beside the board
-        information.gameState[x2][y2] = {owner:0, content:"",revealed:"no"};		//empty the attacking tile
-        information.gameState[x-1][y-1]['revealed']="yes";			//reveal the defender
-        examine(information.gameState);				//update the game board visually
-    }
-    else if (strengtha > strengthd){				//if the attacker's strength exceeds the defender's
-		if(information.playerNumber==1){
-			information.pieces[1]+=information.gameState[x-1][y-1]['content'];
-		}
-		else{
-			information.pieces[0]+=information.gameState[x-1][y-1]['content'];
-		}			//place the defender's piece in the correct place beside the board
-        information.gameState[x - 1][y - 1] = information.gameState[x2][y2];		//occupy the defender's tile with the attacker's piece
-        information.gameState[x - 1][y - 1]['revealed']="yes";				//reveal the attacker's piece
-        information.gameState[x2][y2] = {owner:0, content:"",revealed:"no"};		//empty the attacker's tile
-        examine(information.gameState);			//update the gameboard visually
-    }
-    else{			//if both strength's equal each other
-		information.pieces[information.playerNumber-1]+=information.gameState[x2][y2]['content'];
-		if(information.playerNumber==1){
-			information.pieces[1]+=information.gameState[x-1][y-1]['content'];
-		}
-		else{
-			information.pieces[0]+=information.gameState[x-1][y-1]['content'];
-		}			//place both pieces beside the board
-        information.gameState[x - 1][y - 1] = {owner:0, content:"", revealed:"no"};	
-        information.gameState[x2][y2] = {owner:0, content:"", revealed:"no"};		//empty both tiles
-        examine(information.gameState);		//update the game board visually
-    }
-}			//process an attack		
-			
-game.endSetup = function(){
-	sum=0;
-	i=1;
-	while(typeof information.stock[i] !== 'undefined'){
-		sum+=information.stock[i];
-		i++;
-	}
-	sum+=information.stock['f']+information.stock['b'];
-	//if(sum==0){			//make sure there aren't any pieces left to place
-        information.gameStage="main";
-        $("#si").css("display","none");
-	//}
-	AI.setup();
-}
-		
-game.endGame= function(winner){
-    $("#win").html("player "+winner+" has won");
-    $(".all").css("display","none");
-}
-
-function testExamine(reach){
+function testExamine(information.reach){
 	for(x3=0;x3<10;x3++){
 		for(y3=0;y3<10;y3++){
-			if(reach[x3][y3]["reachable"]){
+			if(information.reach[x3][y3]["reachable"]){
 				$("#x"+(x3+1)+"y"+(y3+1)).css("background-color","purple");
 			}
 		}
 	}
 }
-	
-function examine(vari){
-    $("#pieces1").html(information.pieces[0]);
-    $("#pieces2").html(information.pieces[1]);
-	for(i=0;i<10;i++){
-		for(i1=0;i1<10;i1++){
-			id="#x"+(i+1)+"y"+(i1+1)+"b";
-            id2="#x"+(i+1)+"y"+(i1+1);
-            //if(vari[i][i1]['owner']!=information.playerNumber && vari[i][i1]['owner']!=0 && vari[i][i1]['revealed']=="no"){
-			//	$(id).html("?");		
-            //}
-            //else{
-                $(id).html(vari[i][i1]['content']);
-            //}
-            if(vari[i][i1]['owner']==1){
-                $(id2).css("background-color","blue");
-            }
-            else if(vari[i][i1]['owner']==2){
-                $(id2).css("background-color","red");
-            }
-            else if(vari[i][i1]['owner']==0){
-                $(id2).css("background-color","white");
-            }
-		}
-	}
-}			//visually update the game board with information from the array supplied to the function
                 
                 
                 
