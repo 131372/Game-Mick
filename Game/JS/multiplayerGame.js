@@ -33,7 +33,7 @@ $(function(){
 	}
 });
 
-function send(){
+send = function(){
 	if(information.obtain){
 		$.post( "gameState.php", {waarde:information}, function( data ) {});
 	}

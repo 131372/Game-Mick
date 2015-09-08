@@ -315,41 +315,27 @@ AI.surroundingPieces= function(x,y){
 	threat=0;
 	x2=x-1;
 	y2=y;
-	if(typeof information.gameState[x2]!=="undefined"){
-		threat+=repeat(x,y,x2,y2);
-	}
-	x2=x+1;
-	y2=y;
-	if(typeof information.gameState[x2]!=="undefined"){
-		threat+=repeat(x,y,x2,y2);
-	}
-	x2=x;
-	y2=y-1;
-	if(typeof information.gameState[x2][y2]!=="undefined"){
-		threat+=repeat(x,y,x2,y2);
-	}
-	x2=x;
-	y2=y+1;
-	if(typeof information.gameState[x2][y2]!=="undefined"){
-		threat+=repeat(x,y,x2,y2);
-	}
+	threat+=information.adjustThreat(x,y,x-1,y);
+	threat+=information.adjustThreat(x,y,x+1,y);
+	threat+=information.adjustThreat(x,y,x,y-1);
+	threat+=information.adjustThreat(x,y,x,y+1);
 	return threat;
+}
+
+information.adjustThreat = function(x,y,x2,y2){
+	if(typeof information.gameState[x2]!=="undefined"){
+		if(typeof information.gameState[x2][y2]!=="undefined"){
+			threat+=repeat(x,y,x2,y2);
+		}
+	}
 }
 
 function repeat(xo,yo,x,y){
 	threat=0;
-	x2=x-1;
-	y2=y;
-	threat+=toRepeat(xo,yo,x2,y2);
-	x2=x+1;
-	y2=y;
-	threat+=toRepeat(xo,yo,x2,y2);
-	x2=x;
-	y2=y-1;
-	threat+=toRepeat(xo,yo,x2,y2);
-	x2=x;
-	y2=y+1;
-	threat+=toRepeat(xo,yo,x2,y2);
+	threat+=toRepeat(xo,yo,x-1,y);
+	threat+=toRepeat(xo,yo,x,y+1);
+	threat+=toRepeat(xo,yo,x,y-1);
+	threat+=toRepeat(xo,yo,x,y+1);
 	return threat;
 }
 
@@ -357,7 +343,6 @@ function toRepeat(xo,yo,x2,y2){
 	if(typeof information.gameState[x2]!=="undefined"){
 		if(typeof information.gameState[x2][y2]!=="undefined"){
 			if(parseInt(information.gameState[xo][yo]['content']) > parseInt(information.gameState[x2][y2]['content']) && information.gameState[x2][y2]['owner']==2){
-				console.log("werkt");
 				return parseInt(information.gameState[x2][y2]['content']);
 			}
 			else if(parseInt(information.gameState[xo][yo]['content'])==parseInt(information.gameState[x2][y2]['content']) && information.gameState[xo][yo]['owner']=="2"){
@@ -367,7 +352,7 @@ function toRepeat(xo,yo,x2,y2){
 	}
 	return 0;
 }
-
+/*
 AI.findFlagDistance = function(x,y,clear){
 	information.reach=[];
 	for(i=0;i<10;i++){
@@ -467,7 +452,7 @@ AI.findFlagDistance = function(x,y,clear){
 	else{
 		return	Math.min.apply(Math,distances);
 	}
-}							
+}		*/					
 
 function testExamine(information.reach){
 	for(x3=0;x3<10;x3++){

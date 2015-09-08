@@ -91,18 +91,21 @@ game.click2 = function(id2) {
 }
 
 game.main = function(x,y,x2,y2){
+	console.log(x);
+	console.log("hi");
     if(information.turn){		//if it is this player's turn
         x2=information.selected[0];
         y2=information.selected[1];				//obtain positional values of the selected tile
-        if(information.ownedMovable(x,y)){		//if clicking on a owned tile that is neither a flag nor a bomb
+		console.log(x);
+		console.log(x2);
+        if(information.ownedMoveable(x,y)){		//if clicking on a owned tile that is neither a flag nor a bomb
             game.select(x,y);
         }
-        else if(information.allowedMovement(x,y,x2,y2)){		//if the clicked tile is adjacent to the selected tile or it is an allowed move made by a scout
+        else if(test.allowedMovement(x,y,x2,y2)){		//if the clicked tile is adjacent to the selected tile or it is an allowed move made by a scout
 			if(information.gameState[x-1][y-1]['owner']==0 && information.selected!=""){		//if the target tile is empty and this player has selected a tile
                 game.move(x,y,x2,y2);
-				
 			}
-			else if(information.canAttack(x,y)){		//if the target tile is occupied by an opponent and this player has selected a tile
+			else if(test.canAttack(x,y)){		//if the target tile is occupied by an opponent and this player has selected a tile
 				game.attack();
 			}
 			if(information.AIgame){
@@ -118,7 +121,7 @@ game.move = function(x,y,x2,y2){
     information.gameState[x2][y2]={owner:0,content:"",revealed:"no"};			//empty the selected tile
     game.examine(information.gameState);			//update the game board visually
     information.selected="";			//remove the selection
-    send();				//send the move to the server
+    information.send();				//send the move to the server
 }
 
 game.select = function(x,y){
@@ -205,7 +208,7 @@ game.attackTie = function(x,y,x2,y2){
     information.gameState[x - 1][y - 1] = {owner:0, content:"", revealed:"no"};	
     information.gameState[x2][y2] = {owner:0, content:"", revealed:"no"};		//empty both tiles
     game.examine(information.gameState);		//update the game board visually
-    send();			//send the move to the server
+    information.send();			//send the move to the server
 }
 
 game.defenderPiece = function(x,y){
@@ -223,7 +226,7 @@ game.attackerWin = function(x,y,x2,y2){
     information.gameState[x - 1][y - 1]['revealed']="yes";				//reveal the attacker's piece
     information.gameState[x2][y2] = {owner:0, content:"",revealed:"no"};		//empty the attacker's tile
     game.examine(information.gameState);			//update the gameboard visually
-    send();			//send the move to the server
+    information.send();			//send the move to the server
 }
 
 game.attackerLoss = function(x,y,x2,y2){
@@ -231,7 +234,7 @@ game.attackerLoss = function(x,y,x2,y2){
     information.gameState[x2][y2] = {owner:0, content:"",revealed:"no"};		//empty the attacking tile
     information.gameState[x-1][y-1]['revealed']="yes";			//reveal the defender
     game.examine(information.gameState);				//update the game board visually
-    send();				//send the move to the server
+    information.send();				//send the move to the server
 }
 		
 
@@ -268,16 +271,16 @@ storage = setInterval(function() {
 
 		
 game.endSetup = function(){
-	if(information.emptyStock()){			//make sure there aren't any pieces left to place
+	//if(information.emptyStock()){			//make sure there aren't any pieces left to place
         information.gameStage="main";
         $("#si").css("display","none")
-		if(!information.AIgame()){
+		if(!information.AIgame){
 			send();
 		}
 		else{
-			AI.setup;
+			AI.setup();
 		}
-	}
+	//}
 }
 		
 game.endGame= function(winner){
@@ -288,7 +291,7 @@ game.endGame= function(winner){
 	}
 }
 
-game.examineTile = function(i,i2){
+game.examineTile = function(vari,i,i2){
 	id="#x"+(i+1)+"y"+(i1+1)+"b";
     id2="#x"+(i+1)+"y"+(i1+1);
     if(vari[i][i1]['owner']!=information.playerNumber && vari[i][i1]['owner']!=0 && vari[i][i1]['revealed']=="no"){
@@ -313,7 +316,7 @@ game.examine = function(vari){
     $("#pieces2").html(information.pieces[1]);
 	for(i=0;i<10;i++){
 		for(i1=0;i1<10;i1++){
-			game.examineTile(i,i2);
+			game.examineTile(vari,i,i2);
 			
 		}
 	}
