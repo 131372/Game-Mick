@@ -1,13 +1,14 @@
-test.boardSide = function(y){
-	console.log("hi");
+tests = new Object();
+
+tests.boardSide = function(y){
 	return (y>6 && information.playerNumber==1 ) || (y<5 && information.playerNumber==2);
 }
 
-test.ownedMoveable = function(x,y){
+tests.ownedMoveable = function(x,y){
 	return information.gameState[x-1][y-1]['owner']==information.playerNumber && information.gameState[x-1][y-1]['content']!="b" && information.gameState[x-1][y-1]['content']!="f";
 }
 
-test.allowedScoutMovement = function(x,y,x2,y2){
+tests.allowedScoutMovement = function(x,y,x2,y2){
 	test=true;
     if(y2==y-1 && x2<x-1){
         for(i=x2+1;i<x-1;i++){
@@ -40,19 +41,19 @@ test.allowedScoutMovement = function(x,y,x2,y2){
 	return test;
 }
 
-test.allowedMovement = function(x,y,x2,y2){
-	return (x2==x || x2+2==x) && y2+1==y || x2+1==x && (y2==y || y2+2==y) || (x2==x-1 || y2==y-1) && information.gameState[x2][y2]['content']==2 && information.allowedScoutMovement(x,y,x2,y2);
+tests.allowedMovement = function(x,y,x2,y2){
+	return (x2==x || x2+2==x) && y2+1==y || x2+1==x && (y2==y || y2+2==y) || (x2==x-1 || y2==y-1) && information.gameState[x2][y2]['content']==2 && tests.allowedScoutMovement(x,y,x2,y2);
 }
 
-test.canAttack = function(x,y){
+tests.canAttack = function(x,y){
 	return ((information.gameState[x-1][y-1]['owner']==1 && information.playerNumber!=1) || (information.gameState[x-1][y-1]['owner']==2 && information.playerNumber!=2)) && information.selected!="";
 }
 
-test.moveable = function(x,y){
+tests.moveable = function(x,y){
 	return information.gameState[x - 1][y - 1]['content'] != "b" && information.gameState[x - 1][y - 1]['content'] != "f";
 }
 
-test.endOfGameCheck = function(){
+tests.endOfGameCheck = function(){
 	end=false;
 	$.post( "gameState.php", {waarde:"update"},function(data) {
 		if(data=="end"){
@@ -63,7 +64,7 @@ test.endOfGameCheck = function(){
 	return end;
 }
 
-test.emptyStock = function(){
+tests.emptyStock = function(){
 	sum=0;
 	i=1;
 	while(typeof information.stock[i] !== 'undefined'){
@@ -79,7 +80,7 @@ test.emptyStock = function(){
 	}
 }
 
-test.trueMoveable = function(x,y){
+tests.trueMoveable = function(x,y){
 	test=0;
 	if(typeof information.gameState[x-1]!== "undefined"){
 		if(information.gameState[x-1][y]['content']!=""){
@@ -109,7 +110,7 @@ test.trueMoveable = function(x,y){
 	}
 }
 
-test.maxAbility = function(){
+tests.maxAbility = function(){
 	test=[];
 	for(i=0;i<=AI.abilities.length-1;i++){
 		test.push(AI.abilities[i]["ability"]);
@@ -117,15 +118,15 @@ test.maxAbility = function(){
 	return Math.max.apply(null,test);
 }
 
-test.unownedMoveable = function(x3,y3){
+tests.unownedMoveable = function(x3,y3){
 	return information.gameState[x3][y3]['content']!="b" && information.gameState[x3][y3]['content']!="f" && information.gameState[x3][y3]['owner']!=2;
 }
 
-test.defeatableOrEmpty = function(x2,y2,x3,y3){
+tests.defeatableOrEmpty = function(x2,y2,x3,y3){
 	return parseInt(information.gameState[x2][y2]['content'])>parseInt(information.gameState[x3][y3]['content']) || information.gameState[x3][y3]['content']==0;
 }
 
-test.checkRemainingDistance = function(){
+tests.checkRemainingDistance = function(){
 	if(Math.min.apply(null,information.distances)==1){
 		return false;
 	}

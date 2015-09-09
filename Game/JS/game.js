@@ -34,6 +34,18 @@ for(i=0;i<10;i++){
 	information.gameState.push(value);
 }			//create a blank game board			
 
+function castBoolean(bool){
+	if(bool===true){
+		return true;
+	}
+	else if(bool==="true"){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
 function stringify(obj){
 	arr="";
 	for(var el of obj){
@@ -86,29 +98,26 @@ game.click2 = function(id2) {
 		game.setup(x,y);
 	}
     else if(information.gameStage=="main"){
-		game.main(x,y,x2,y2);
+		game.main(x,y);
     }
 }
 
-game.main = function(x,y,x2,y2){
-	console.log(x);
-	console.log("hi");
+game.main = function(x,y){
     if(information.turn){		//if it is this player's turn
         x2=information.selected[0];
         y2=information.selected[1];				//obtain positional values of the selected tile
-		console.log(x);
-		console.log(x2);
-        if(information.ownedMoveable(x,y)){		//if clicking on a owned tile that is neither a flag nor a bomb
+        if(tests.ownedMoveable(x,y)){		//if clicking on a owned tile that is neither a flag nor a bomb
             game.select(x,y);
         }
-        else if(test.allowedMovement(x,y,x2,y2)){		//if the clicked tile is adjacent to the selected tile or it is an allowed move made by a scout
+        else if(tests.allowedMovement(x,y,x2,y2)){		//if the clicked tile is adjacent to the selected tile or it is an allowed move made by a scout
 			if(information.gameState[x-1][y-1]['owner']==0 && information.selected!=""){		//if the target tile is empty and this player has selected a tile
                 game.move(x,y,x2,y2);
 			}
-			else if(test.canAttack(x,y)){		//if the target tile is occupied by an opponent and this player has selected a tile
+			else if(tests.canAttack(x,y)){		//if the target tile is occupied by an opponent and this player has selected a tile
 				game.attack();
 			}
-			if(information.AIgame){
+			if(castBoolean(information.AIgame)){
+				console.log("hoi");
 				setTimeout(function(){AI.turn()},1000);
 			}
 		}
@@ -121,7 +130,7 @@ game.move = function(x,y,x2,y2){
     information.gameState[x2][y2]={owner:0,content:"",revealed:"no"};			//empty the selected tile
     game.examine(information.gameState);			//update the game board visually
     information.selected="";			//remove the selection
-    information.send();				//send the move to the server
+    send();				//send the move to the server
 }
 
 game.select = function(x,y){
@@ -140,7 +149,7 @@ game.select = function(x,y){
 }
 
 game.setup = function(){
-	if(information.boardSide(y)){		//make sure pieces can only be manipulated on the right side of the board
+	if(tests.boardSide(y)){		//make sure pieces can only be manipulated on the right side of the board
 		if(information.stock[information.type]>0 && information.gameState[x-1][y-1]['content']==""){	//if tile is empty and you still have pieces available of the desired type...
 			game.placePiece(x,y);
 		}
@@ -174,7 +183,7 @@ game.attack = function(){
     strengtha = parseInt(information.gameState[x2][y2]['content']);		//determine the strength of the attacker
     information.selected = "";				//clear the selection
     information.turn = false;				//end this player's turn
-    if(information.moveable(x,y)){
+    if(tests.moveable(x,y)){
         strengthd = parseInt(information.gameState[x - 1][y - 1]['content']);
     }				//in the case the targeted tile is neither a bomb nor a flag determine its strength
     if(information.gameState[x - 1][y - 1]['content'] == "b"){
@@ -208,7 +217,7 @@ game.attackTie = function(x,y,x2,y2){
     information.gameState[x - 1][y - 1] = {owner:0, content:"", revealed:"no"};	
     information.gameState[x2][y2] = {owner:0, content:"", revealed:"no"};		//empty both tiles
     game.examine(information.gameState);		//update the game board visually
-    information.send();			//send the move to the server
+    send();			//send the move to the server
 }
 
 game.defenderPiece = function(x,y){
@@ -226,7 +235,7 @@ game.attackerWin = function(x,y,x2,y2){
     information.gameState[x - 1][y - 1]['revealed']="yes";				//reveal the attacker's piece
     information.gameState[x2][y2] = {owner:0, content:"",revealed:"no"};		//empty the attacker's tile
     game.examine(information.gameState);			//update the gameboard visually
-    information.send();			//send the move to the server
+    send();			//send the move to the server
 }
 
 game.attackerLoss = function(x,y,x2,y2){
@@ -234,47 +243,14 @@ game.attackerLoss = function(x,y,x2,y2){
     information.gameState[x2][y2] = {owner:0, content:"",revealed:"no"};		//empty the attacking tile
     information.gameState[x-1][y-1]['revealed']="yes";			//reveal the defender
     game.examine(information.gameState);				//update the game board visually
-    information.send();				//send the move to the server
+    send();				//send the move to the server
 }
-		
-
-		
-			
-storage = setInterval(function() {
-	if(information.obtain){
-		$.post( "gameState.php", {waarde:"obtain"}, function( data ) {
-			if(data!="empty" && !information.endOfGameCheck()){			//only attempt to update anything if the server had any information to obtain and the information there is a move made by opponent
-				data=$.parseJSON(data);		//convert the obtained information into an array
-				turn=data[1];
-				if(turn!=information.playerName){
-					information.turn=true;
-				}			//give this player the next turn
-				else{
-					information.turn=false;
-				}			//this part is redundant I believe, but it can't hurt
-				data2=data[0]['gameState'];
-				if(information.gameStateMemory!=stringify(data2)){		//don't attempt to update the game board if a new move hasn't been made since we last obtained a move
-					information.gameState=data2;			//update the local game-state and make a copy
-					information.gameStateMemory=stringify(information.gameState);		//update the memory
-					information.pieces=data[0]['pieces'];		//update the piecse beside the board
-					game.examine(information.gameState);		//update the game board visually
-					if(information.playerNumber==2 && information.setupMemory==1){
-						$("#si").css("display","block");
-						information.setupMemory=0;
-					}			//make the setup interface visible if necessary
-				}
-			}
-		});
-	}
-},1000)					//regularly obtain the game-state
-
-
 		
 game.endSetup = function(){
 	//if(information.emptyStock()){			//make sure there aren't any pieces left to place
         information.gameStage="main";
         $("#si").css("display","none")
-		if(!information.AIgame){
+		if(!castBoolean(information.AIgame)){
 			send();
 		}
 		else{
@@ -286,7 +262,7 @@ game.endSetup = function(){
 game.endGame= function(winner){
     $("#win").html("player "+winner+" has won");
     $(".all").css("display","none");
-	if(!information.AIgame){
+	if(!castBoolean(information.AIgame)){
 		$.post( "gameState.php", {waarde:"end"}, function( data ) {	});
 	}
 }
