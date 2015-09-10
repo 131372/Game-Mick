@@ -2,7 +2,9 @@
 <html>
     <head>
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-        <script type="text/javascript" src="JS/AIgame.js">
+		<script type="text/javascript" src="JS/tests.js"></script>
+		<script type="text/javascript" src="JS/game.js"></script>
+        <script type="text/javascript" src="JS/AIgame.js"></script>
 
         </script>
 

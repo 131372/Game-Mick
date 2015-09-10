@@ -30,7 +30,7 @@ AI.setup = function(){
 			AI.placePiece(x,y);
 		}
 	}
-	examine(information.gameState);
+	game.examine(information.gameState);
 }		
 
 AI.placePiece = function(x,y){
@@ -78,7 +78,7 @@ game.testSetup = function(){
 			}
 		}
 	}
-	examine(information.gameState);
+	game.examine(information.gameState);
 }
 
 information.createThreat = function(){
@@ -94,7 +94,7 @@ information.createThreat = function(){
 }
 
 AI.turn = function(){
-	information.createThreat;
+	information.createThreat();
 	information.turn=true;
 	for(x=0;x<10;x++){
 		for(y=0;y<10;y++){
@@ -113,7 +113,7 @@ AI.processMove = function(x,y){
 		move=AI.findPath(AI.threat[x][y]['abilityLocation']['x'],AI.threat[x][y]['abilityLocation']['y'],x,y);
 		information.gameState[move['x']][move['y']]=information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']];
 		information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']]={'content':"",'revealed':"no",'owner':0};
-		examine(information.gameState);
+		game.examine(information.gameState);
 	}
 }
 
@@ -253,7 +253,7 @@ information.determineReach = function(x3,y3){
 	information.findDistance(x3+1,y3);
 	information.findDistance(x3,y3-1);
 	information.findDistance(x3,y3+1);
-	if(distances.length!=0){
+	if(information.distances.length!=0){
 		information.reach[x3][y3]={distance:Math.min.apply(Math,distances)+1,reachable:true};
 	}
 }
@@ -290,9 +290,9 @@ AI.findDistance = function(x2,y2,x,y,clear){
 				if(!information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']==0 && clear=="yes" || !information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']!="wall" && clear=="no"){
 					information.determineReach(x3,y3);
 				}
-				else if(information.unownedMoveable(x3,y3 )){
-					if(information.defeatableOrEmpty(x2,y2,x3,y3)){
-						information.determineReach(x3,y3);
+				else if(tests.unownedMoveable(x3,y3 )){
+					if(tests.defeatableOrEmpty(x2,y2,x3,y3)){
+						tests.determineReach(x3,y3);
 					}
 				}
 			}
@@ -303,7 +303,7 @@ AI.findDistance = function(x2,y2,x,y,clear){
 	information.findDistance(x+1,y);
 	information.findDistance(x,y-1);
 	information.findDistance(x,y+1);
-	if(distances.length==0){
+	if(information.distances.length==0){
 		return 0;
 	}
 	else{
@@ -453,7 +453,7 @@ AI.findFlagDistance = function(x,y,clear){
 		return	Math.min.apply(Math,distances);
 	}
 }		*/					
-
+/*
 function testExamine(information.reach){
 	for(x3=0;x3<10;x3++){
 		for(y3=0;y3<10;y3++){
@@ -462,7 +462,7 @@ function testExamine(information.reach){
 			}
 		}
 	}
-}
+}*/
                 
                 
                 

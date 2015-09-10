@@ -117,7 +117,6 @@ game.main = function(x,y){
 				game.attack();
 			}
 			if(castBoolean(information.AIgame)){
-				console.log("hoi");
 				setTimeout(function(){AI.turn()},1000);
 			}
 		}
@@ -130,7 +129,9 @@ game.move = function(x,y,x2,y2){
     information.gameState[x2][y2]={owner:0,content:"",revealed:"no"};			//empty the selected tile
     game.examine(information.gameState);			//update the game board visually
     information.selected="";			//remove the selection
-    send();				//send the move to the server
+	if(!castBoolean(information.AIgame)){
+		send();				//send the move to the server
+	}
 }
 
 game.select = function(x,y){
@@ -196,6 +197,7 @@ game.attack = function(){
     }			//if the target tile is a bomb make sure it is stronger than all attackers, except the miner
     if(information.gameState[x - 1][y - 1]['content'] == "f"){
         game.endGame(information.playerNumber);
+		return;
     }				//if the flag is captured end the game
     if(strengtha==1 && strengthd==10){
         strengtha=11;
