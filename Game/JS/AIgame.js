@@ -15,44 +15,23 @@ If the tile already contains another piece this piece is removed from the board 
 */
 AI = new Object();
 		
-information.playerNumber="1";
-information.turn=true;		//setting up some variables
-information.AIgame=true;
+information.playerNumber="1";		//make the player player number 1
+information.turn=true;				//give the player the first turn
+information.AIgame=true;			//state that this is a game against the AI
 
 function getRandom(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
-}						
+}			//a simple function for getting a random number between two values					
 		
 AI.setup = function(){
-	AI.stock={ f:1 , b:6 , 1:1 , 2:8 , 3:5 , 4:4 , 5:4 , 6:4 , 7:3 , 8:2 , 9:1 , 10:1};
+	AI.stock={ f:1 , b:6 , 1:1 , 2:8 , 3:5 , 4:4 , 5:4 , 6:4 , 7:3 , 8:2 , 9:1 , 10:1};		//the pieces the AI has to place
 	for(x=0;x<10;x++){
 		for(y=0;y<4;y++){
-			AI.placePiece(x,y);
+			AI.placePiece(x,y);		//make the AI place a piece
 		}
 	}
-	game.examine(information.gameState);
+	game.examine(information.gameState);		//update the game board visually
 }		
-
-AI.placePiece = function(x,y){
-	finished=false;
-	while(!finished){
-		select = getRandom(1,12);
-		if(select==11){
-			select="b";
-		}
-		if(select==12){
-			select="f";
-		}
-		if(AI.stock[select]>0){
-			if(select=="f"){
-				AI.flagLocation={x:x,y:y};
-			}
-			AI.stock[select]--;
-			information.gameState[x][y]={owner:2,content:select,revealed:"no"};
-			finished=true;
-		}
-	}
-}
 
 game.testSetup = function(){
 	AI.stock={ f:1 , b:6 , 1:1 , 2:8 , 3:5 , 4:4 , 5:4 , 6:4 , 7:3 , 8:2 , 9:1 , 10:1};
@@ -81,20 +60,29 @@ game.testSetup = function(){
 	game.examine(information.gameState);
 }
 
-information.createThreat = function(){
-	AI.threat=[];
-	for(i=0;i<10;i++){
-		value=[];
-		for(i2=0;i2<10;i2++){
-			value.push({threat:0,"bestAbility":"","abilityLocation":{"x":"","y":""}});
+AI.placePiece = function(x,y){
+	finished=false;			//used to keep trying to place a random piece until one is finally selected which can be placed (because the AI still has pieces of this type left to place)
+	while(!finished){
+		select = getRandom(1,12);
+		if(select==11){
+			select="b";
 		}
-		AI.threat.push(value);
+		if(select==12){
+			select="f";
+		}			//select a random piece type
+		if(AI.stock[select]>0){		//if the AI has pieces left of this type
+			if(select=="f"){
+				AI.flagLocation={x:x,y:y};
+			}		//store the location of the AI's flag
+			AI.stock[select]--;			//reduce the remaining amount of pieces of this type
+			information.gameState[x][y]={owner:2,content:select,revealed:"no"};		//place the piece on the board
+			finished=true;			//end the while loop, since a piece has been placed in this position
+		}
 	}
-	AI.threats=[];	
 }
 
 AI.turn = function(){
-	information.createThreat();
+	information.createThreat();		//create the threat object
 	information.turn=true;
 	for(x=0;x<10;x++){
 		for(y=0;y<10;y++){
@@ -108,12 +96,25 @@ AI.turn = function(){
 	}
 }
 
+information.createThreat = function(){
+	AI.threat=[];			//create the actual threat object
+	for(i=0;i<10;i++){
+		value=[];
+		for(i2=0;i2<10;i2++){
+			value.push({threat:0,"bestAbility":"","abilityLocation":{"x":"","y":""}});
+		}
+		AI.threat.push(value);
+	}			//fill the threat object with empty data	
+	AI.threats=[];			//create the threats object used to determine the maximum threat value across all the opponents pieces
+}
+
 AI.processMove = function(x,y){
-	if(AI.threat[x][y]["threat"]==Math.max.apply(null,AI.threats)){
-		move=AI.findPath(AI.threat[x][y]['abilityLocation']['x'],AI.threat[x][y]['abilityLocation']['y'],x,y);
+	if(AI.threat[x][y]["threat"]==Math.max.apply(null,AI.threats)){			//if the current tile contains (one of) the best target(s) to attack...
+		move=AI.findPath(AI.threat[x][y]['abilityLocation']['x'],AI.threat[x][y]['abilityLocation']['y'],x,y);		//find the direction in which the piece that is best suited to make the attack must move
 		information.gameState[move['x']][move['y']]=information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']];
 		information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']]={'content':"",'revealed':"no",'owner':0};
 		game.examine(information.gameState);
+		console.log("hoi");
 	}
 }
 
@@ -139,13 +140,13 @@ AI.determineAction = function(x,y){
 			for(x2=0;x2<10;x2++){
 				for(y2=0;y2<10;y2++){
 					if(information.gameState[x2][y2]['owner']==2){
-						if(information.trueMoveable(x2,y2)){
+						if(tests.trueMoveable(x2,y2)){
 							AI.determineAbility(x,y,x2,y2);
 						}
 					}
 				}
 			}
-			maxAbility=AI.maxAbility();
+			maxAbility=tests.maxAbility();
 			AI.threat[x][y]["threat"]=AI.threat[x][y]["threat"]*maxAbility;
 			for(i=0;i<AI.abilities.length;i++){
 				if(AI.abilities[i]["ability"]==maxAbility){
@@ -174,10 +175,12 @@ AI.determineAbility = function(x,y,x2,y2){
 		}
 		else{
 			ability+=0;
+			AI.abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
 		}
 	}
 	else{
 		ability=-100;
+		AI.abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
 	}
 }
 
@@ -188,8 +191,8 @@ AI.findPath = function(x2,y2,x,y){
 		memory=stringify(information.reach);
 		for(x3=0;x3<10;x3++){
 			for(y3=0;y3<10;y3++){
-				if(information.unownedMoveable(x3,y3 )){
-					if(information.defeatableOrEmpty(x2,y2,x3,y3)){
+				if(tests.unownedMoveable(x3,y3 )){
+					if(tests.defeatableOrEmpty(x2,y2,x3,y3)){
 						information.determineReach(x3,y3);
 					}
 				}
@@ -207,12 +210,12 @@ AI.findPath = function(x2,y2,x,y){
 		information.determineDistance(x+1,y,2);
 		information.determineDistance(x,y-1,3);
 		information.determineDistance(x,y+1,4);
-		dist=information.checkRemainingDistance();
+		dist=tests.checkRemainingDistance();
 		bool=true;
 		for(i=0;i<4;i++){
-			if(typeof distances[i]!=="undefined"){
-				if(distances[i]==Math.min.apply(null,distances) && bool){
-					switch(action[i]){
+			if(typeof information.distances[i]!=="undefined"){
+				if(information.distances[i]==Math.min.apply(null,information.distances) && bool){
+					switch(information.action[i]){
 						case 1:
 							x--;
 							break;
@@ -233,6 +236,7 @@ AI.findPath = function(x2,y2,x,y){
 			}
 		}
 	}
+	console.log(i2);
 	return path[path.length-1];
 }
 
@@ -254,7 +258,7 @@ information.determineReach = function(x3,y3){
 	information.findDistance(x3,y3-1);
 	information.findDistance(x3,y3+1);
 	if(information.distances.length!=0){
-		information.reach[x3][y3]={distance:Math.min.apply(Math,distances)+1,reachable:true};
+		information.reach[x3][y3]={distance:Math.min.apply(Math,information.distances)+1,reachable:true};
 	}
 }
 
@@ -292,7 +296,7 @@ AI.findDistance = function(x2,y2,x,y,clear){
 				}
 				else if(tests.unownedMoveable(x3,y3 )){
 					if(tests.defeatableOrEmpty(x2,y2,x3,y3)){
-						tests.determineReach(x3,y3);
+						information.determineReach(x3,y3);
 					}
 				}
 			}
@@ -307,7 +311,7 @@ AI.findDistance = function(x2,y2,x,y,clear){
 		return 0;
 	}
 	else{
-		return	Math.min.apply(Math,distances);
+		return	Math.min.apply(Math,information.distances);
 	}
 }
 
@@ -328,6 +332,7 @@ information.adjustThreat = function(x,y,x2,y2){
 			threat+=repeat(x,y,x2,y2);
 		}
 	}
+	return threat;
 }
 
 function repeat(xo,yo,x,y){
@@ -352,117 +357,7 @@ function toRepeat(xo,yo,x2,y2){
 	}
 	return 0;
 }
-/*
-AI.findFlagDistance = function(x,y,clear){
-	information.reach=[];
-	for(i=0;i<10;i++){
-		value=[];
-		for(i2=0;i2<10;i2++){
-			value.push({distance:"none",reachable:false});
-		}
-		information.reach.push(value);
-	}
-	information.reach[x][y]={distance:0,reachable:true};
-	memory="";
-	while(memory!=stringify(information.reach)){
-		memory=stringify(information.reach);
-		for(x2=0;x2<10;x2++){
-			for(y2=0;y2<10;y2++){
-				if(!information.reach[x2][y2]["reachable"] && information.gameState[x2][y2]['content']==0 && clear=="yes" || !information.reach[x2][y2]["reachable"] && information.gameState[x2][y2]['content']!="wall" && clear=="no"){
-					distances=[];
-					if(typeof information.reach[x2-1]!=="undefined"){
-						if(information.reach[x2-1][y2]["reachable"]){
-							distances.push(information.reach[x2-1][y2]["distance"]);
-						}
-					}
-					if(typeof information.reach[x2+1]!=="undefined"){
-						if(information.reach[x2+1][y2]["reachable"]){
-							distances.push(information.reach[x2+1][y2]["distance"]);
-						}
-					}
-					if(typeof information.reach[x2][y2-1]!=="undefined"){
-						if(information.reach[x2][y2-1]["reachable"]){
-							distances.push(information.reach[x2][y2-1]["distance"]);
-						}
-					}
-					if(typeof information.reach[x2][y2+1]!=="undefined"){
-						if(information.reach[x2][y2+1]["reachable"]){
-							distances.push(information.reach[x2][y2+1]["distance"]);
-						}
-					}
-					if(distances.length!=0){
-						information.reach[x2][y2]={distance:Math.min.apply(Math,distances)+1,reachable:true};
-					}
-				}
-				else if(clear=="semi" && information.gameState[x2][y2]['content']!="b" && information.gameState[x2][y2]['content']!="f"){
-					if(parseInt(information.gameState[x][y]['content'])>parseInt(information.gameState[x2][y2]['content']) || information.gameState[x2][y2]['content']==0){
-						distances=[];
-						if(typeof information.reach[x2-1]!=="undefined"){
-							if(information.reach[x2-1][y2]["reachable"]){
-								distances.push(information.reach[x2-1][y2]["distance"]);
-							}
-						}
-						if(typeof information.reach[x2+1]!=="undefined"){
-							if(information.reach[x2+1][y2]["reachable"]){
-								distances.push(information.reach[x2+1][y2]["distance"]);
-							}
-						}
-						if(typeof information.reach[x2][y2-1]!=="undefined"){
-							if(information.reach[x2][y2-1]["reachable"]){
-								distances.push(information.reach[x2][y2-1]["distance"]);
-							}
-						}
-						if(typeof information.reach[x2][y2+1]!=="undefined"){
-							if(information.reach[x2][y2+1]["reachable"]){
-								distances.push(information.reach[x2][y2+1]["distance"]);
-							}
-						}
-						if(distances.length!=0){
-							information.reach[x2][y2]={distance:Math.min.apply(Math,distances)+1,reachable:true};
-						}
-					}
-				}
-			}
-		}
-	}
-	distances=[];
-	if(typeof information.reach[AI.flagLocation["x"]-1] !== "undefined"){
-		if(information.reach[AI.flagLocation["x"]-1][AI.flagLocation["y"]]["reachable"]){
-			distances.push(information.reach[AI.flagLocation["x"]-1][AI.flagLocation["y"]]["distance"]);
-		}
-	}
-	if(typeof information.reach[AI.flagLocation["x"]+1] !== "undefined"){
-		if(information.reach[AI.flagLocation["x"]+1][AI.flagLocation["y"]]["reachable"]){
-			distances.push(information.reach[AI.flagLocation["x"]+1][AI.flagLocation["y"]]["distance"]);
-		}
-	}
-	if(typeof information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]-1] !== "undefined"){
-		if(information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]-1]["reachable"]){
-			distances.push(information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]-1]["distance"]);
-		}
-	}
-	if(typeof information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1] !== "undefined"){
-		if(information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1]["reachable"]){
-			distances.push(information.reach[AI.flagLocation["x"]][AI.flagLocation["y"]+1]["distance"]);
-		}
-	}
-	if(distances.length==0){
-		return 0;
-	}
-	else{
-		return	Math.min.apply(Math,distances);
-	}
-}		*/					
-/*
-function testExamine(information.reach){
-	for(x3=0;x3<10;x3++){
-		for(y3=0;y3<10;y3++){
-			if(information.reach[x3][y3]["reachable"]){
-				$("#x"+(x3+1)+"y"+(y3+1)).css("background-color","purple");
-			}
-		}
-	}
-}*/
+				
                 
                 
                 

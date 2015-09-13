@@ -6,8 +6,6 @@
 		<script type="text/javascript" src="JS/game.js"></script>
         <script type="text/javascript" src="JS/AIgame.js"></script>
 
-        </script>
-
         <style>
 
             .tile1{
