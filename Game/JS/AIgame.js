@@ -83,17 +83,17 @@ AI.placePiece = function(x,y){
 
 AI.turn = function(){
 	information.createThreat();		//create the threat object
-	information.turn=true;
+	information.turn=true;			//grant the player his turn
 	for(x=0;x<10;x++){
 		for(y=0;y<10;y++){
 			AI.determineAction(x,y);
 		}
-	}
+	}								//gather information later used to determine which piece should move in the direction of which other piece
 	for(x=0;x<10;x++){
 		for(y=0;y<10;y++){
 			AI.processMove(x,y);
 		}
-	}
+	}								//establish which piece should move in the direction of which other piece then execute that move
 }
 
 information.createThreat = function(){
@@ -111,30 +111,27 @@ information.createThreat = function(){
 AI.processMove = function(x,y){
 	if(AI.threat[x][y]["threat"]==Math.max.apply(null,AI.threats)){			//if the current tile contains (one of) the best target(s) to attack...
 		move=AI.findPath(AI.threat[x][y]['abilityLocation']['x'],AI.threat[x][y]['abilityLocation']['y'],x,y);		//find the direction in which the piece that is best suited to make the attack must move
-		information.gameState[move['x']][move['y']]=information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']];
-		information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']]={'content':"",'revealed':"no",'owner':0};
-		game.examine(information.gameState);
-		console.log("hoi");
+		information.gameState[move['x']][move['y']]=information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']];		//move the AI's piece to the target tile
+		information.gameState[AI.threat[x][y]['abilityLocation']['x']][AI.threat[x][y]['abilityLocation']['y']]={'content':"",'revealed':"no",'owner':0};			//empty the AI's previously occupied tile
+		game.examine(information.gameState);			//visually update the game board
 	}
-}
+}					//unfinished!!!
 
 AI.determineAction = function(x,y){
-	if(information.gameState[x][y]['owner']==1){
+	if(information.gameState[x][y]['owner']==1){		//for every piece belonging to the opponent
 		if(information.gameState[x][y]['content']=="f"){
 			AI.threat[x][y]['threat']=100;
-		}
+		}			//if it is a flag give it a high "threat" level
 		else{
 			if(information.gameState[x][y]['content']=="b"){
 				AI.threat[x][y]['threat']=5;
-			}
-			else{
-				AI.threat[x][y]['threat']=parseInt(information.gameState[x][y]['content']);
-			}
-			AI.threat[x][y]['threat']-=AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"yes");
-			AI.threat[x][y]['threat']-=0.5*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"semi");
-			AI.threat[x][y]['threat']-=0.1*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"no");
-			if(information.gameState[x][y]['content']!="b"){
-				AI.threat[x][y]['threat']+=AI.surroundingPieces(x,y);
+			}				//if it is a bomb give it a middling threat level
+			else{				//otherwise...
+				AI.threat[x][y]['threat']=parseInt(information.gameState[x][y]['content']);			//give it a threat level equal to its rank
+				AI.threat[x][y]['threat']+=AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"yes");		//if a clear path from this piece to the AI's flag can be found increase its threat level equal to the distance to the flag
+				AI.threat[x][y]['threat']+=0.5*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"semi");	//if this piece can fight its way to the AI's flag increase its threat level proportional to the distance to the flag
+				AI.threat[x][y]['threat']+=0.1*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"no");		//if no path can be found to the AI's flag increase this piece's threat level proportional to the distance to the flag
+				AI.threat[x][y]['threat']+=AI.surroundingPieces(x,y);		//increase this piece's threat level depending on the AI's pieces in its vicinity (at most two moves away) which it can defeat
 			}
 			AI.abilities=[];
 			for(x2=0;x2<10;x2++){
@@ -145,26 +142,31 @@ AI.determineAction = function(x,y){
 						}
 					}
 				}
-			}
+			}				//for every piece the AI controls determine its ability to deal with the current piece being examined
 			maxAbility=tests.maxAbility();
-			AI.threat[x][y]["threat"]=AI.threat[x][y]["threat"]*maxAbility;
+			AI.threat[x][y]["threat"]=AI.threat[x][y]["threat"]*maxAbility;		//increase this piece's threat level by how wel it can be dealt with
 			for(i=0;i<AI.abilities.length;i++){
 				if(AI.abilities[i]["ability"]==maxAbility){
 					AI.threat[x][y]["abilityLocation"]=AI.abilities[i]["location"];
 					break;
 				}
-			}
-			AI.threats.push(AI.threat[x][y]["threat"]);
+			}				//store the location of the AI's piece best suited to deal with the current piece
+			AI.threats.push(AI.threat[x][y]["threat"]);			//add the threat level to a seperate array used to determine which possible move to execute (the move associated with the highest threat level)
 		}
 	}	
 }
 
 AI.determineAbility = function(x,y,x2,y2){
-	if(AI.findDistance(x2,y2,x,y,"semi")!=0){
+	if(AI.findDistance(x2,y2,x,y,"semi")!=0){			//if this piece (x2,y2) can fight its way to the target piece (x,y)...
 		abillity=0;
-		ability-=AI.findDistance(x2,y2,x,y,"yes");
-		ability-=0.5*AI.findDistance(x2,y2,x,y,"semi");
-		ability-=0.1*AI.findDistance(x2,y2,x,y,"no");
+		if(AI.findDistance(x2,y2,x,y,"yes")!=0){
+			ability-=0.1*AI.findDistance(x2,y2,x,y,"yes");
+		}
+		else{
+			if(AI.findDistance(x2,y2,x,y,"semi")!=0){
+				ability-=0.5*AI.findDistance(x2,y2,x,y,"semi");
+			}						//!!!!!!!!!!!!!!!!!improve!!!!!!!!!!!!!!! right now a clear path to the target piece can lead to a lower ability than if no clear path existed
+		}			//decrease this piece's ability depending on the distance to the target piece and whether the path to this piece is clear or if it can only fight its way there
 		if(information.gameState[x2][y2]['content']>information.gameState[x][y]['content']){
 			ability+=10;
 			AI.abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
@@ -176,45 +178,45 @@ AI.determineAbility = function(x,y,x2,y2){
 		else{
 			ability+=0;
 			AI.abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
-		}
+		}			//depending on wether this piece can defeat, tie with or lose to the target piece increase its ability accordingly (and store both its ability and location)
 	}
 	else{
 		ability=-100;
 		AI.abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
-	}
+	}			//if this piece cannot find a clear path to the target piece decrease its ability dramaitcally and store both its ability and location
 }
 
 AI.findPath = function(x2,y2,x,y){
-	information.createReach(x2,y2);
+	information.createReach(x2,y2);		//create a reach object
 	memory="";
-	while(memory!=stringify(information.reach)){
+	while(memory!=stringify(information.reach)){		//continue whilst progress is being made (things change every loop)
 		memory=stringify(information.reach);
 		for(x3=0;x3<10;x3++){
 			for(y3=0;y3<10;y3++){
-				if(tests.unownedMoveable(x3,y3 )){
-					if(tests.defeatableOrEmpty(x2,y2,x3,y3)){
-						information.determineReach(x3,y3);
+				if(tests.unownedMoveableOrEmpty(x3,y3)){
+					if(tests.defeatableOrEmpty(x2,y2,x3,y3)){		//if this piece (x3,y3) doesn't belong to the AI's and it can be defeated (by the AI's piece x2,y2) or the tile is empty...
+						information.determineReach(x3,y3);			//determine whether this tile (x3,y3) is reachable and if so what distance this tile is to the current tile (x2,y2)
 					}
 				}
 			}
 		}
-	}
+	}			//determines which tile the AI's piece (x2,y2) can reach and what distance it has to travel to do so
 	path=[];
 	dist=true;
 	i2=0;
-	while(dist && i2<10000){
+	while(dist && i2<10000){		//while a path hasn't been found and the loop hasn't run an exceedingly large amount of times (should only be necessary whilst debugging)
 		i2++;
 		information.distances=[];
 		information.action=[];
 		information.determineDistance(x-1,y,1);
 		information.determineDistance(x+1,y,2);
 		information.determineDistance(x,y-1,3);
-		information.determineDistance(x,y+1,4);
-		dist=tests.checkRemainingDistance();
-		bool=true;
+		information.determineDistance(x,y+1,4);		//in each direction around x and y (which originally is the location of the target piece) check how far the AI's piece (x2,y2) has to travel to reach that tile (if it can)
+		dist=tests.checkRemainingDistance();		//if the to be examined square (x,y) is now directly adjacent to the AI's piece stop the loop
+		bool=true;			//makes sure only one tile with minimum distance is chosen
 		for(i=0;i<4;i++){
 			if(typeof information.distances[i]!=="undefined"){
-				if(information.distances[i]==Math.min.apply(null,information.distances) && bool){
+				if(information.distances[i]==Math.min.apply(null,information.distances) && bool){	//if the distance in this direction is minimal...
 					switch(information.action[i]){
 						case 1:
 							x--;
@@ -228,17 +230,16 @@ AI.findPath = function(x2,y2,x,y){
 						case 4:
 							y++;
 							break;
-					}
+					}			//change the to be examined tile (x,y) to the tile that lies in this direction
 					console.log("x"+x+"y"+y);
-					path.push({"x":x,"y":y});
-					bool=false;
+					path.push({"x":x,"y":y});		//add this tile to the path
+					bool=false;				//make sure only one tile is added per loop
 				}
 			}
 		}
 	}
-	console.log(i2);
-	return path[path.length-1];
-}
+	return path[path.length-1];		//return the last tile of the path
+}			//this function determines which direction a piece (x2,y2) should move in order to move to a target tile (x,y) it does this by first!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 information.determineDistance = function(x,y,action){
 	if(typeof information.reach[x] !== "undefined"){
@@ -294,7 +295,7 @@ AI.findDistance = function(x2,y2,x,y,clear){
 				if(!information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']==0 && clear=="yes" || !information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']!="wall" && clear=="no"){
 					information.determineReach(x3,y3);
 				}
-				else if(tests.unownedMoveable(x3,y3 )){
+				else if(tests.unownedMoveableOrEmpty(x3,y3 )){
 					if(tests.defeatableOrEmpty(x2,y2,x3,y3)){
 						information.determineReach(x3,y3);
 					}

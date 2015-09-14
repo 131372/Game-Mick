@@ -115,8 +115,8 @@ tests.maxAbility = function(){
 	return Math.max.apply(null,test);
 }		//check what the highest ability score is
 
-tests.unownedMoveable = function(x3,y3){
-	return information.gameState[x3][y3]['content']!="b" && information.gameState[x3][y3]['content']!="f" && information.gameState[x3][y3]['owner']!=2;
+tests.unownedMoveableOrEmpty = function(x3,y3){
+	return information.gameState[x3][y3]['content']!="b" && information.gameState[x3][y3]['content']!="f" && information.gameState[x3][y3]['content']!="wall" && information.gameState[x3][y3]['owner']!=2;
 }		//check that the tile is either empty or contains an opponents moveable
 
 tests.defeatableOrEmpty = function(x2,y2,x3,y3){
