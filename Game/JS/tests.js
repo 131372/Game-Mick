@@ -131,3 +131,7 @@ tests.checkRemainingDistance = function(){
 		return true;
 	}
 }		//check if the path has been completed
+
+tests.viablePath = function(clear){
+	return !information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']==0 && clear=="yes" || !information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']!="wall" && clear=="no";
+}

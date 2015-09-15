@@ -128,7 +128,7 @@ AI.determineAction = function(x,y){
 			}				//if it is a bomb give it a middling threat level
 			else{				//otherwise...
 				AI.threat[x][y]['threat']=parseInt(information.gameState[x][y]['content']);			//give it a threat level equal to its rank
-				AI.threat[x][y]['threat']+=AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"yes");		//if a clear path from this piece to the AI's flag can be found increase its threat level equal to the distance to the flag
+				AI.threat[x][y]['threat']+= (AI.flagLocation['x'],AI.flagLocation['y'],x,y,"yes");		//if a clear path from this piece to the AI's flag can be found increase its threat level equal to the distance to the flag
 				AI.threat[x][y]['threat']+=0.5*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"semi");	//if this piece can fight its way to the AI's flag increase its threat level proportional to the distance to the flag
 				AI.threat[x][y]['threat']+=0.1*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"no");		//if no path can be found to the AI's flag increase this piece's threat level proportional to the distance to the flag
 				AI.threat[x][y]['threat']+=AI.surroundingPieces(x,y);		//increase this piece's threat level depending on the AI's pieces in its vicinity (at most two moves away) which it can defeat
@@ -239,29 +239,29 @@ AI.findPath = function(x2,y2,x,y){
 		}
 	}
 	return path[path.length-1];		//return the last tile of the path
-}			//this function determines which direction a piece (x2,y2) should move in order to move to a target tile (x,y) it does this by first!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+}			//this function determines which direction a piece (x2,y2) should move in order to make progress toward a target tile (x,y) it does this by first determining which tiles are reachable (by x2,y2) and how far this tile has to move in order to reach these tiles and then working its way backwards from the target tile (x,y) choosing the tiles which are the closest to the original tile (x2,y2)
 
 information.determineDistance = function(x,y,action){
 	if(typeof information.reach[x] !== "undefined"){
 		if(typeof information.reach[x][y] !== "undefined"){
-			if(information.reach[x][y]["reachable"]){
-				information.distances.push(information.reach[x][y]["distance"]);
-				information.action.push(action);
+			if(information.reach[x][y]["reachable"]){			//if this tile is reachable (and exists)
+				information.distances.push(information.reach[x][y]["distance"]);		//store	the distance from this tile (x,y) to the original tile
+				information.action.push(action);			//store the direction in which must be traveled in order to move to this tile
 			}
 		}
 	}
-}
+}				//used to find the shortest path between two tiles
 
 information.determineReach = function(x3,y3){
 	information.distances=[];
 	information.findDistance(x3-1,y3);
 	information.findDistance(x3+1,y3);
 	information.findDistance(x3,y3-1);
-	information.findDistance(x3,y3+1);
-	if(information.distances.length!=0){
-		information.reach[x3][y3]={distance:Math.min.apply(Math,information.distances)+1,reachable:true};
+	information.findDistance(x3,y3+1);				//check each direction if that tile is reachable
+	if(information.distances.length!=0){			//if at least one of the tiles is reachable...
+		information.reach[x3][y3]={distance:Math.min.apply(Math,information.distances)+1,reachable:true};		//make the distance to this tile equal to the shortest distance to one of its neighboring tiles plus one
 	}
-}
+}			//used to determine whether this tile (x3,y3) is reachable by a piece
 
 information.findDistance = function(x3,y3){
 	if(typeof information.reach[x3]!=="undefined"){
@@ -271,7 +271,7 @@ information.findDistance = function(x3,y3){
 			}
 		}
 	}
-}
+}			//check whether this tile is reachable, if so store its distance
 
 information.createReach = function(x2,y2){
 	information.reach=[];
@@ -282,39 +282,39 @@ information.createReach = function(x2,y2){
 		}
 		information.reach.push(value);
 	}
-	information.reach[x2][y2]={distance:0,reachable:true};
-}
+	information.reach[x2][y2]={distance:0,reachable:true};		//make a certain tile reachable (the tile of which the reach must be determined)
+}				//create a reach object
 
 AI.findDistance = function(x2,y2,x,y,clear){
-	information.createReach(x2,y2);
+	information.createReach(x2,y2);			//create a reach object
 	memory="";
-	while(memory!=stringify(information.reach)){
+	while(memory!=stringify(information.reach)){		//whilst progress is being made
 		memory=stringify(information.reach);
 		for(x3=0;x3<10;x3++){
 			for(y3=0;y3<10;y3++){
-				if(!information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']==0 && clear=="yes" || !information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']!="wall" && clear=="no"){
-					information.determineReach(x3,y3);
+				if(tests.viablePath(clear)){		//if this tile fits the restrictions placed by the clear variable (yes=no pieces or walls in the way, no=no walls in the way
+					information.determineReach(x3,y3);		//check if this tile is reachable	
 				}
 				else if(tests.unownedMoveableOrEmpty(x3,y3 )){
-					if(tests.defeatableOrEmpty(x2,y2,x3,y3)){
-						information.determineReach(x3,y3);
+					if(tests.defeatableOrEmpty(x2,y2,x3,y3)){		//if this tile fits the restrictions of a semi clear path (no friendly pieces, unbeatable opponents pieces or walls in the way)
+						information.determineReach(x3,y3);		//check if this tile is reachable
 					}
 				}
 			}
 		}
-	}
+	}			//determine reachable tiles and their distance based on the restrictions placed by the clear variable (it is a loop because each time only tiles adjacent to already reachable tiles will be converted to reachable)
 	information.distances=[];
 	information.findDistance(x-1,y);
 	information.findDistance(x+1,y);
 	information.findDistance(x,y-1);
-	information.findDistance(x,y+1);
-	if(information.distances.length==0){
+	information.findDistance(x,y+1);		//check the distance the original tile (x2,y2) must travel when approaching from any direction to reach the target tile (x,y) if it can
+	if(information.distances.length==0){		//if it is unreachable
 		return 0;
 	}
 	else{
-		return	Math.min.apply(Math,information.distances);
+		return	Math.min.apply(Math,information.distances);		//return the minimum distance
 	}
-}
+}				//find the distance between two tile and return it (make a distinctions between a clear path a semi clear (if the piece can fight its way to the other tile) path or a blocked path)
 
 AI.surroundingPieces= function(x,y){
 	threat=0;
