@@ -318,19 +318,29 @@ AI.findDistance = function(x2,y2,x,y,clear){
 
 AI.surroundingPieces= function(x,y){
 	threat=0;
-	x2=x-1;
-	y2=y;
-	threat+=information.adjustThreat(x,y,x-1,y);
+	threat+=toRepeat(x,y,x,y+2);
+	threat+=toRepeat(x,y,x-1,y+1);
+	threat+=toRepeat(x,y,x,y+1);
+	threat+=toRepeat(x,y,x+1,y+1);
+	threat+=toRepeat(x,y,x-2,y);
+	threat+=toRepeat(x,y,x-1,y);
+	threat+=toRepeat(x,y,x+1,y);
+	threat+=toRepeat(x,y,x+2,y);
+	threat+=toRepeat(x,y,x-1,y-1);
+	threat+=toRepeat(x,y,x,y-1);
+	threat+=toRepeat(x,y,x+1,y-1);
+	threat+=toRepeat(x,y,x,y-2);
+	/*threat+=information.adjustThreat(x,y,x-1,y);
 	threat+=information.adjustThreat(x,y,x+1,y);
 	threat+=information.adjustThreat(x,y,x,y-1);
-	threat+=information.adjustThreat(x,y,x,y+1);
+	threat+=information.adjustThreat(x,y,x,y+1);*/
 	return threat;
-}
-
+}		//for each tile in a diamond shape around the original tile (x,y) add a threat value
+/*
 information.adjustThreat = function(x,y,x2,y2){
 	if(typeof information.gameState[x2]!=="undefined"){
 		if(typeof information.gameState[x2][y2]!=="undefined"){
-			threat+=repeat(x,y,x2,y2);
+			threat+=toRepeat(x,y,x2,y2);
 		}
 	}
 	return threat;
@@ -344,20 +354,20 @@ function repeat(xo,yo,x,y){
 	threat+=toRepeat(xo,yo,x,y+1);
 	return threat;
 }
-
+*/
 function toRepeat(xo,yo,x2,y2){
 	if(typeof information.gameState[x2]!=="undefined"){
 		if(typeof information.gameState[x2][y2]!=="undefined"){
-			if(parseInt(information.gameState[xo][yo]['content']) > parseInt(information.gameState[x2][y2]['content']) && information.gameState[x2][y2]['owner']==2){
+			if(tests.defeatableOpponent(xo,yo,x2,y2)){
 				return parseInt(information.gameState[x2][y2]['content']);
 			}
-			else if(parseInt(information.gameState[xo][yo]['content'])==parseInt(information.gameState[x2][y2]['content']) && information.gameState[xo][yo]['owner']=="2"){
+			else if(tests.tieableOpponent(xo,yo,x2,y2)){
 				return 0.5*parseInt(information.gameState[x2][y2]['content']);
 			}
 		}
 	}
 	return 0;
-}
+}				//if the tile (x2,y2) exists and the original piece (xo,yo) is able the defeat the AI's piece occupying this tile (x2,y2) add a threat value equal to the rank of the piece that could be defeated (unless its a tie in that case halve the added threat value)
 				
                 
                 

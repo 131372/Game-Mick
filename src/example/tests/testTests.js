@@ -1,0 +1,61 @@
+information.obtain=false;
+
+describe("tests",function(){
+	it("",function(){
+		information.playerNumber=1;
+		expect(tests.boardSide(5)).toBe(false);
+		expect(tests.boardSide(7)).toBe(true);
+		expect(tests.boardSide(2)).toBe(false);
+		
+		information.playerNumber=2;
+		expect(tests.boardSide(5)).toBe(false);
+		expect(tests.boardSide(4)).toBe(true);
+		expect(tests.boardSide(8)).toBe(false);
+	})
+	it("",function(){
+		information.playerNumber=1;
+		information.gameState[0][0]={content:"7",owner:1};
+		expect(tests.ownedMoveable(1,1)).toBe(true);
+		information.playerNumber=2;
+		expect(tests.ownedMoveable(1,1)).toBe(false);
+		information.gameState[0][0]={content:"b",owner:2};
+		expect(tests.ownedMoveable(1,1)).toBe(false);
+		information.gameState[0][0]={content:"f",owner:2};
+		expect(tests.ownedMoveable(1,1)).toBe(false);
+	})
+	it("",function(){
+		for(x=0;x<10;x++){
+			for(y=0;y<10;y++){
+				information.gameState[x][y]['content']="";
+			}
+		}
+		expect(tests.allowedScoutMovement(5,5,4,9).toBe(true);
+		expect(tests.allowedScoutMovement(5,5,4,0).toBe(true);
+		expect(tests.allowedScoutMovement(5,5,9,4).toBe(true);
+		expect(tests.allowedScoutMovement(5,5,0,4).toBe(true);
+		information.gameState[4][6]['content']="5";
+		information.gameState[4][2]['content']="5";
+		information.gameState[7][4]['content']="5";
+		information.gameState[1][4]['content']="5";
+		expect(tests.allowedScoutMovement(5,5,4,9).toBe(false);
+		expect(tests.allowedScoutMovement(5,5,4,0).toBe(false);
+		expect(tests.allowedScoutMovement(5,5,9,4).toBe(false);
+		expect(tests.allowedScoutMovement(5,5,0,4).toBe(false);
+	})
+	it("",function(){
+		information.gameState[7][6]['content']="4";
+		expect(tests.allowedMovement(7,7,7,6)).toBe(true);
+		expect(tests.allowedMovement(9,7,7,6)).toBe(true);
+		expect(tests.allowedMovement(8,6,7,6)).toBe(true);
+		expect(tests.allowedMovement(8,8,7,6)).toBe(true);
+		expect(tests.allowedMovement(7,6,7,6)).toBe(false);
+		expect(tests.allowedMovement(1,7,7,6)).toBe(false);
+		information.gameState[7][6]['content']="2";
+		spyOn(tests,"allowedScoutMovement").andReturn(true);
+		expect(tests.allowedMovement(1,7,7,6)).toBe(true);
+		expect(tests.allowedMovement(8,4,7,6)).toBe(true);
+		spyOn(tests,"allowedScoutMovement").andReturn(false);
+		expect(tests.allowedMovement(1,7,7,6)).toBe(false);
+		expect(tests.allowedMovement(8,4,7,6)).toBe(false);
+	})
+});

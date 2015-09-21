@@ -13,8 +13,12 @@
 
         <script type="text/javascript" src="js/testHelpers.js"></script>
         <script type="text/javascript" src="js/toBeTypeOf.js"></script>
-
+		
+		<script type="text/javascript" src="../../../Game/JS/tests.js"></script>
+		<script type="text/javascript" src="../../../Game/JS/AIgame.js"></script>
+		<script type="text/javascript" src="../../../Game/JS/multiplayerGame.js"></script>
 		<script type="text/javascript" src="./testGame.js"></script>
+		<script type="text/javascript" src="./testTests.js"></script>
 
     </head> 
     <body> 

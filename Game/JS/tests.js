@@ -1,5 +1,4 @@
 // various tests for use in if statements
-
 tests = new Object();
 
 tests.boardSide = function(y){
@@ -134,4 +133,12 @@ tests.checkRemainingDistance = function(){
 
 tests.viablePath = function(clear){
 	return !information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']==0 && clear=="yes" || !information.reach[x3][y3]["reachable"] && information.gameState[x3][y3]['content']!="wall" && clear=="no";
+}
+
+tests.defeatableOpponent = function(xo,yo,x2,y2){
+	return parseInt(information.gameState[xo][yo]['content']) > parseInt(information.gameState[x2][y2]['content']) && information.gameState[x2][y2]['owner']==2;
+}
+
+tests.tieableOpponent = function(xo,yo,x2,y2){
+	return parseInt(information.gameState[xo][yo]['content'])==parseInt(information.gameState[x2][y2]['content']) && information.gameState[xo][yo]['owner']=="2";
 }

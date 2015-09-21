@@ -77,7 +77,7 @@ $(function(){
 	})
 });			//make all game board tiles clickable
 			
-game.click = 	function() {				//process clicks on tiles
+game.click = function() {				//process clicks on tiles
     id2="#"+event.target.id;		//obtain id
 	test=id2.split("");
 	if(test[test.length-1]!="b"){
@@ -87,9 +87,7 @@ game.click = 	function() {				//process clicks on tiles
 }
 			
 game.click2 = function(id2) {
-	information.id2=id2;
-    information.id=id2.substring(0,id2.length-1);
-	proc=information.id2.split("y");
+	proc=id2.split("y");
 	x=proc[0].replace(/\D/g,'');
 	y=proc[1].replace(/\D/g,'');			//obtain x and y positional values
 	if(information.gameStage =="setup"){
@@ -253,7 +251,7 @@ game.attackerLoss = function(x,y,x2,y2){
 }
 		
 game.endSetup = function(){
-	//if(information.emptyStock()){			//make sure there aren't any pieces left to place
+	if(tests.emptyStock()){			//make sure there aren't any pieces left to place
         information.gameStage="main";		//change the current game stage
         $("#si").css("display","none")		//hide the setup interface
 		if(!castBoolean(information.AIgame)){		//if it is a multiplayer game
@@ -262,7 +260,7 @@ game.endSetup = function(){
 		else{
 			AI.setup();			//otherwise make the AI set up its side of the board
 		}
-	//}
+	}
 }
 		
 game.endGame= function(winner){

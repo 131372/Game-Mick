@@ -1,4 +1,5 @@
 information.obtain=false;
+information.AIgame=false;
 
 describe("boardboard setup",function(){
 	it("make sure the stock has been set",function(){
@@ -32,9 +33,15 @@ describe("internal processing", function(){
 		obj=[[{a:"hoi",b:10},{a:"abc",b:5}],[{a:"xyz",b:0},{a:"hallo",b:100}]];
 		expect(stringify(obj)).toEqual("hoi10abc5xyz0hallo100");
 	})
+	it("make sure the castBoolean function works",function(){
+		expect(castBoolean("true")).toBe(true);
+		expect(castBoolean(true)).toBe(true);
+		expect(castBoolean("false")).toBe(false);
+		expect(castBoolean(false)).toBe(false);
+	})
 });
 
-describe("click events",function(){
+describe("click events while setting up",function(){
 	it("make sure the click function works",function(){
 		information.gameStage="setup";
 		information.playerNumber=1;
@@ -67,8 +74,165 @@ describe("click events",function(){
 		expect(information.stock['b']).toEqual(3);
 		expect(information.stock['f']).toEqual(1);
 		expect(information.gameState[4][3]['content']).toEqual("");		//make sure that if a tile is already occupied by a different piece type it puts that piece back instead of replacing it
-		
+	})
+});
+
+describe("click events during main game",function(){
+	it("",function(){
 		information.gameStage="main";
+		spyOn(game,"main");
+		game.click2("#x5y7b");
+		expect(game.main).toHaveBeenCalledWith("5","7");
+	})
+	it("",function(){
+		information.turn=true;
+		spyOn(game,"select");
+		information.playerNumber=1;
+		information.gameState[5][7]={content:"4",owner:1};
+		game.main(6,8);
+		expect(game.select).toHaveBeenCalledWith(6,8);
+		
+		information.selected=[1,0];
+		spyOn(game,"move");
+		information.gameState[0][0]={owner:0,content:""};
+		information.gameState[1][0]={owner:1,content:"7"};
+		game.main(1,1);
+		expect(game.move).toHaveBeenCalledWith(1,1,1,0);
+		
+		spyOn(game,"attack");
+		information.selected=[8,9];
+		information.gameState[9][9]={content:5,owner:2}
+		information.gameState[8][9]={content:3,owner:1}
+		game.main(10,10);
+		expect(game.attack).toHaveBeenCalledWith(10,10,8,9);
+	})
+	it("",function(){
+		information.gameState[3][4]={content:"",owner:0};
+		information.gameState[4][4]={content:"10",owner:1,revealed:"yes"};
+		game.move(4,5,4,4);
+		expect(information.gameState[3][4]).toEqual({content:"10",owner:1,revealed:"yes"});
+		expect(information.gameState[4][4]).toEqual({content:"",owner:0,revealed:"no"});
+		expect(information.turn).toBe(false);
+		expect(information.selected).toEqual("");
+	})
+	it("",function(){
+		information.selected="";
+		game.select(4,8);
+		expect(information.selected).toEqual([3,7]);
+	})
+	it("",function(){
+		information.turn=true;
+		information.gameState[3][3]={content:"f",owner:2}
+		spyOn(game,"endGame");
+		game.attack(4,4,0,0);
+		expect(game.endGame).toHaveBeenCalledWith(1);
+		
+		information.turn=true;
+		spyOn(game,"attackerLoss");
+		information.gameState[4][4]={owner:2,content:"5"};
+		information.gameState[1][1]={owner:1,content:"3"};
+		game.attack(5,5,1,1);
+		expect(game.attackerLoss).toHaveBeenCalledWith(5,5,1,1);
+		expect(information.turn).toBe(false);
+		expect(information.selected).toEqual("");
+		
+		information.turn=true;
+		spyOn(game,"attackerWin");
+		information.gameState[4][4]={owner:2,content:"6"};
+		information.gameState[1][1]={owner:1,content:"7"};
+		game.attack(5,5,1,1);
+		expect(game.attackerLoss).toHaveBeenCalledWith(5,5,1,1);
+		expect(information.turn).toBe(false);
+		expect(information.selected).toEqual("");
+		
+		information.turn=true;
+		spyOn(game,"attackTie");
+		information.gameState[4][4]={owner:2,content:"1"};
+		information.gameState[1][1]={owner:1,content:"1"};
+		game.attack(5,5,1,1);
+		expect(game.attackTie).toHaveBeenCalledWith(5,5,1,1);
+		expect(information.turn).toBe(false);
+		expect(information.selected).toEqual("");
+		
+		information.turn=true;
+		information.gameState[4][4]={owner:2,content:"10"};
+		information.gameState[1][1]={owner:1,content:"1"};
+		game.attack(5,5,1,1);
+		expect(game.attackerWin).toHaveBeenCalledWith(5,5,1,1);
+		expect(information.turn).toBe(false);
+		expect(information.selected).toEqual("");
+		
+		information.turn=true;
+		information.gameState[4][4]={owner:2,content:"1"};
+		information.gameState[1][1]={owner:1,content:"10"};
+		game.attack(5,5,1,1);
+		expect(game.attackerWin).toHaveBeenCalledWith(5,5,1,1);
+		expect(information.turn).toBe(false);
+		expect(information.selected).toEqual("");
+		
+		information.turn=true;
+		information.gameState[4][4]={owner:2,content:"b"};
+		information.gameState[1][1]={owner:1,content:"10"};
+		game.attack(5,5,1,1);
+		expect(game.attackerLoss).toHaveBeenCalledWith(5,5,1,1);
+		expect(information.turn).toBe(false);
+		expect(information.selected).toEqual("");
+		
+		information.turn=true;
+		information.gameState[4][4]={owner:2,content:"b"};
+		information.gameState[1][1]={owner:1,content:"3"};
+		game.attack(5,5,1,1);
+		expect(game.attackerWin).toHaveBeenCalledWith(5,5,1,1);
+		expect(information.turn).toBe(false);
+		expect(information.selected).toEqual("");
+	})
+	it("",function(){
+		spyOn(game,"defenderPiece");
+		spyOn(game,"examine");
+		information.pieces[0]="12";
+		information.gameState[0][0]={content:"5",owner:2};
+		information.gameState[3][7]={content:"9",owner:1};
+		game.attackTie(1,1,3,7);
+		expect(information.gameState[3][7]).toEqual({content:"",owner:0,revealed:"no"});
+		expect(information.pieces[0]).toEqual("129");
+		expect(game.defenderPiece).toHaveBeenCalledWith(1,1);
+		expect(game.examine).toHaveBeenCalled();
+	})
+	it("",function(){
+		information.pieces[1]="bb10";
+		information.gameState[5][9]['content']=8;
+		game.defenderPiece(6,10);
+		expect(information.pieces[1]).toEqual("bb108");
+		
+		information.playerNumber=2;
+		information.pieces[0]="22267";
+		information.gameState[5][9]['content']="b";
+		game.defenderPiece(6,10);
+		expect(information.pieces[0]).toEqual("22267b");
+	})
+	it("",function(){
+		spyOn(game,"defenderPiece");
+		spyOn(game,"examine");
+		information.gameState[3][8]={content:3,owner:2,revealed:"no"};
+		information.gameState[4][8]={content:6,owner:1,revealed:"no"};
+		game.attackerWin(4,9,4,8);
+		expect(game.defenderPiece).toHaveBeenCalledWith(4,9);
+		expect(information.gameState[4][8]).toEqual({owner:0,revealed:"no",content:""});
+		expect(information.gameState[3][8]).toEqual({content:6,revealed:"yes",owner:1});
+		expect(game.examine).toHaveBeenCalled();
+	})
+	it("",function(){
+		spyOn(game,"examine");
+		information.gameState[9][9]={owner:2,revealed:"no",content:5};
+		information.gameState[4][6]={owner:1,content:2,revealed:"yes"};
+		information.pieces[1]="";
+		game.attackerLoss(10,10,4,6);
+		expect(information.pieces[1]).toEqual("2");
+		expect(information.gameState[9][9]).toEqual({owner:2,revealed:"yes",content:5});
+		expect(information.gameState[4][6]).toEqual({owner:0,revealed:"no",content:""});
+		expect(game.examine).toHaveBeenCalled();
+	})
+		/*information.gameStage="main";
 		information.turn=true;
 		information.selected="";
 		information.gameState[1][9]={owner:2,content:4};
@@ -227,6 +391,5 @@ describe("click events",function(){
 		expect(information.gameState[4][4]).toEqual({owner:2,content:3,revealed:"yes"});
 		expect(information.turn).toEqual(false);
 		expect(information.pieces).toEqual(["b",""]);
-		expect(information.selected).toEqual("");		//make sure a bomb defence against a miner is processed properly
-	})
-});
+		expect(information.selected).toEqual("");		//make sure a bomb defence against a miner is processed properly*/
+})
