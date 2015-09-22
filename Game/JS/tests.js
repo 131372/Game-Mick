@@ -142,3 +142,31 @@ tests.defeatableOpponent = function(xo,yo,x2,y2){
 tests.tieableOpponent = function(xo,yo,x2,y2){
 	return parseInt(information.gameState[xo][yo]['content'])==parseInt(information.gameState[x2][y2]['content']) && information.gameState[xo][yo]['owner']=="2";
 }
+
+tests.detectWinByDefault = function(){
+	win1=true;
+	win2=true;
+	for(x=0;x<10;x++){
+		for(y=0;y<10;y++){
+			if(information.gameState[x][y]['owner']==1){
+				if(information.gameState[x][y]['content']!="b" && information.gameState[x][y]['content']!="f"){
+					win2=false;
+				}
+			}
+			if(information.gameState[x][y]['owner']==2){
+				if(information.gameState[x][y]['content']!="b" && information.gameState[x][y]['content']!="f"){
+					win1=false;
+				}
+			}
+		}
+	}			//check all tiles, if they contain a moveable piece controlled by a paticular player, the other player can't yet have won by default
+	if(win1 && win2){
+		game.endGame("tie");
+	}
+	else if(win1){
+		game.endGame(1);
+	}
+	else if(win2){
+		game.endGame(2);
+	}
+}

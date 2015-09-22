@@ -111,6 +111,7 @@ game.main = function(x,y){
 			}
 			else if(tests.canAttack(x,y)){		//if the target tile is occupied by an opponent and this player has selected a tile
 				game.attack(x,y,x2,y2);			//attack target piece
+				tests.detectWinByDefault();
 			}
 			if(castBoolean(information.AIgame)){		//if the game being played is against the AI
 				setTimeout(function(){AI.turn()},1000);		//let the AI make its move (after a small delay, as to make sure the player saw what happened)
@@ -251,7 +252,7 @@ game.attackerLoss = function(x,y,x2,y2){
 }
 		
 game.endSetup = function(){
-	if(tests.emptyStock()){			//make sure there aren't any pieces left to place
+	//if(tests.emptyStock()){			//make sure there aren't any pieces left to place
         information.gameStage="main";		//change the current game stage
         $("#si").css("display","none")		//hide the setup interface
 		if(!castBoolean(information.AIgame)){		//if it is a multiplayer game
@@ -260,11 +261,16 @@ game.endSetup = function(){
 		else{
 			AI.setup();			//otherwise make the AI set up its side of the board
 		}
-	}
+	//}
 }
 		
 game.endGame= function(winner){
-    $("#win").html("player "+winner+" has won");			//display victory message
+	if(winner=="tie"){
+		$("#win").html("this game ended in a tie")
+	}
+	else{
+		$("#win").html("player "+winner+" has won");			
+	}				//display victory message
     $(".all").css("display","none");			//hide almost everything
 	if(!castBoolean(information.AIgame)){		//if it is a multiplayer game
 		$.post( "gameState.php", {waarde:"end"}, function( data ) {	});		//process the end of the game on the server side
