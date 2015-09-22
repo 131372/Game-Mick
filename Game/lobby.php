@@ -38,7 +38,7 @@
         echo "<table>";
         foreach ($result as $row) {
             $owner = $row['Owner'];
-            echo "<tr><td>".$owner . "</td><td><form action='join.php' method='post'><input type='hidden' name='owner' value='$owner'><input type='submit' value='join'></form></td></tr>" . "<br>";
+            echo "<tr><td>".$owner . "</td><td><form action='join.php' method='post'><input type='hidden' name='owner' value='$owner'><input type='submit' value='join'></form></td></tr>";
         }
         echo "</table>";
         ?>

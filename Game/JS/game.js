@@ -273,7 +273,7 @@ game.endGame= function(winner){
 	}				//display victory message
     $(".all").css("display","none");			//hide almost everything
 	if(!castBoolean(information.AIgame)){		//if it is a multiplayer game
-		$.post( "gameState.php", {waarde:"end"}, function( data ) {	});		//process the end of the game on the server side
+		$.post( "gameState.php", {waarde:"end"+winner}, function( data ) {	});		//process the end of the game on the server side
 	}
 }
 

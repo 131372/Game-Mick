@@ -59,7 +59,6 @@
             //create the game board
         }
         ?>
-
         <div id="information" style="display:none">
             <span id="owner"><?php echo $owner; ?></span>
             <span id="name"><?php echo $name; ?></span>

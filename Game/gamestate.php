@@ -55,9 +55,13 @@ if ($data == "obtain") {
     } else {
         echo "empty";
     }
-} else if($data == "end"){
+} else if(strstr($data,"end")){
+	$winner=str_replace("end","",$data);
     query("DELETE FROM games WHERE game_id=:game_id",array(":game_id"=>$game_id),$db);
-    query("INSERT INTO games(game_id,turn,move) VALUES (:game_id,:name,:move)",array(":game_id" => $game_id, ":name" => $name, ":move" =>"end"),$db);
+    query("INSERT INTO games(game_id,turn,move) VALUES (:game_id,:name,:move)",array(":game_id" => $game_id, ":name" => $name, ":move" =>json_encode(array("end",$winner))),$db);
+}
+else if($data=="destroy"){
+	query("DELETE FROM games WHERE game_id=:game_id",array(":game_id"=>$game_id),$db);
 }
 else {
     query("INSERT INTO games(game_id,turn,move) VALUES (:game_id,:name,:move)", array(":game_id" => $game_id, ":name" => $name, ":move" => json_encode($data)), $db);

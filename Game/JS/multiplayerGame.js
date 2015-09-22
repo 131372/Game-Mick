@@ -42,11 +42,15 @@ send = function(){
 storage = setInterval(function() {
 	if(information.obtain){
 		$.post( "gameState.php", {waarde:"obtain"}, function( data ) {
-			if(data[1]+data[2]+data[3]=="end"){
+			data=$.parseJSON(data);		//convert the obtained information into an object
+			console.log(data[0][0]);
+			if(data[0][0]=="end"){
+				console.log("hallo");
 				clearInterval(storage);
+				game.endGame(data[0][1]);
+				$.post( "gameState.php", {waarde:"destroy"}, function() {};
 			}			//if the game has ended stop regularly trying to update
 			else if(data!="empty"){			//only attempt to update anything if the server had any information to obtain and the information there is a move made by opponent
-				data=$.parseJSON(data);		//convert the obtained information into an object
 				turn=data[1];
 				if(turn!=information.playerName){
 					information.turn=true;
