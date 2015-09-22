@@ -1,5 +1,5 @@
 game
 	-games
-		-id,game_id,turn,move
+		-id,game_id(varchar),turn(varchar),move(text)
 	-rooms
-		-Owner,Guest,game_id
+		-id,Owner(varchar),Guest(varchar),game_id(varchar)
