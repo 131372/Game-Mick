@@ -22,6 +22,7 @@ information.selected="";			//keeps track of the currently selected piece (which 
 information.gameStage="setup";		//keeps track of the game stage (setup or main)
 information.stock={ f:1 , b:6 , 1:1 , 2:8 , 3:5 , 4:4 , 5:4 , 6:4 , 7:3 , 8:2 , 9:1 , 10:1};		//the number of available pieces per type
 information.gameState=[];		//the entire game board
+information.currentIds=[];
 
 for(i=0;i<10;i++){
 	value=[];
@@ -30,7 +31,15 @@ for(i=0;i<10;i++){
 		value.push(value2);
 	}
 	information.gameState.push(value);
-}			//create a blank game board			
+}			//create a blank game board		
+
+for(i=0;i<10;i++){
+	value=[];
+	for(i1=0;i1<10;i1++){
+		value.push(0);
+	}
+	information.currentIds.push(value);
+}			//create a blank game board	
 
 function castBoolean(bool){
 	if(bool===true){
@@ -57,7 +66,7 @@ function stringify(obj){
 }		//turn game board into string as to easily check if it is equal to the memory of the game board
 		
 $(function(){
-	$('#x3y5,#x4y5,#x7y5,#x8y5,#x3y6,#x4y6,#x7y6,#x8y6').css('background-color','black');
+	//$('#x3y5,#x4y5,#x7y5,#x8y5,#x3y6,#x4y6,#x7y6,#x8y6').css('background-color','black');
 	for(i=4;i<=5;i++){
 		for(i2=2;i2<=3;i2++){
 			information.gameState[i2][i]={owner:3,content:"wall",revealed:"no"};
@@ -132,7 +141,7 @@ game.move = function(x,y,x2,y2){
 }
 
 game.select = function(x,y){
-	$("#x"+x+"y"+y).css("background-color","green");			//colour the newly selected tile
+	/*$("#x"+x+"y"+y).css("background-color","green");			//colour the newly selected tile
     if(information.selected!=""){		//if a previous tile was already selected
         if(information.selected[0]!=x-1 || information.selected[1]!=y-1){
             if(information.playerNumber==1){
@@ -142,11 +151,11 @@ game.select = function(x,y){
                 $("#x"+(information.selected[0]+1)+"y"+(information.selected[1]+1)).css("background-color","red")
             }
         }				//change that tiles colour back
-    }
+    }*/
     information.selected=[x-1,y-1];		//select the new tile	
 }
 
-game.setup = function(){
+game.setup = function(x,y){
 	if(tests.boardSide(y)){		//make sure pieces can only be manipulated on the right side of the board
 		if(information.stock[information.type]>0 && information.gameState[x-1][y-1]['content']==""){	//if tile is empty and you still have pieces available of the desired type...
 			game.placePiece(x,y);		//place a new piece
@@ -172,7 +181,7 @@ game.removePiece = function(x,y,piece){
 
 game.placePiece = function(x,y){
 	information.gameState[x-1][y-1]={owner:information.playerNumber,content:information.type,revealed:"no"};		//introduce the new piece on the game board
-    game.examine(information.gameState);			//update the game board visually
+	game.examine(information.gameState);			//update the game board visually
 	information.stock[information.type]--;			//reduce amount of remaining pieces
 	$("#remaining"+information.type).html("remaining:"+information.stock[information.type]);	//update remaining pieces counter visually
 }
@@ -280,7 +289,42 @@ game.endGame= function(winner){
 game.examineTile = function(vari,i,i2){
 	id="#x"+(i+1)+"y"+(i1+1)+"b";
     id2="#x"+(i+1)+"y"+(i1+1);			//obtain the id of the div and the span inside it
-    if(vari[i][i1]['owner']!=information.playerNumber && vari[i][i1]['owner']!=0 && vari[i][i1]['revealed']=="no"){		//if the contents of a tile are supposed to be hidden
+	if(information.gameState[i][i2]['owner']!=0 && information.gameState[i][i2]['owner']!=3){
+		if(information.gameState[i][i2]['revealed']=="no" && information.gameState[i][i2]['owner']!=information.playerNumber){
+			if(information.gameState[i][i2]['owner']==1){
+				$("#bluehidden"+information.currentIds[1]["hidden"]).css("top",39+i2*48).css("left",17+i*48).css("display","block");
+				information.currentIds[1]["hidden"]++;
+			}
+			else{
+				$("#redhidden"+information.currentIds[2]["hidden"]).css("top",39+i2*48).css("left",17+i*48).css("display","block");
+				information.currentIds[2]["hidden"]++;
+			}
+		}
+		else{
+			if(information.gameState[i][i2]['owner']==1){
+				color="blue";
+			}
+			else if(information.gameState[i][i2]['owner']==2){
+				color="red";
+			}
+			else if(information.gameState[i][i2]['owner']==3){
+				return;
+			}
+			if(information.gameState[i][i2]['content']=="f"){
+				rank="flag";
+			}
+			else if(information.gameState[i][i2]['content']=="b"){
+				rank="bomb";
+			}
+			else{
+				rank=information.gameState[i][i2]['content'];
+			}
+			imageId="#"+color+rank+information.currentIds[information.gameState[i][i2]['owner']][information.gameState[i][i2]['content']];
+			information.currentIds[information.gameState[i][i2]['owner']][information.gameState[i][i2]['content']]++;
+			$(imageId).css("top",39+i2*48).css("left",17+i*48).css("display","block");
+		}
+	}
+    /*if(vari[i][i1]['owner']!=information.playerNumber && vari[i][i1]['owner']!=0 && vari[i][i1]['revealed']=="no"){		//if the contents of a tile are supposed to be hidden
         $(id).html("?");				//display a question mark
     }
     else{
@@ -294,15 +338,32 @@ game.examineTile = function(vari,i,i2){
     }
     else if(vari[i][i1]['owner']==0){
         $(id2).css("background-color","white");
-    }			//colour the tile depending on the owner
+    }			//colour the tile depending on the owner*/
 }
 	
 game.examine = function(vari){
     $("#pieces1").html(information.pieces[0]);
     $("#pieces2").html(information.pieces[1]);		//update the pieces beside the board
+	for($i=1;$i<11;$i++){
+		for($i1=1;$i1<9;$i1++){
+			$("#red"+$i+$i1).css("display","none");
+			$("#blue"+$i+$i1).css("display","none");
+		}
+	}
+	$("#redflag1").css("display","none");
+	$("#blueflag1").css("display","none");
+	for($i=1;$i<7;$i++){
+		$("#redbomb"+$i).css("display","none");
+		$("#bluebomb"+$i).css("display","none");
+	}
+	for($i=1;$<21;$i++){
+		$("#redhidden"+$i).css("display","none");
+		$("#bluehidden"+$i).css("display","none");
+	}
+	information.currentIds={1:{"hidden":1,"b":1,"f":1,1:1,2:1,3:1,4:1,5:1,6:1,7:1,8:1,9:1,10:1},2:{"hidden":1,"b":1,"f":1,1:1,2:1,3:1,4:1,5:1,6:1,7:1,8:1,9:1,10:1}};
 	for(i=0;i<10;i++){
 		for(i1=0;i1<10;i1++){
-			game.examineTile(vari,i,i2);
+			game.examineTile(vari,i,i1);
 		}
 	}
 }			//visually update the game board with information from the array supplied to the function
