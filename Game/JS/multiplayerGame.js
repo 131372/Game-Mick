@@ -34,8 +34,10 @@ $(function(){
 });			//the first time this should establish who is player one and who is player two, then every time the page reloads check if the game ended and if not update the information object with information from the server 
 
 send = function(){
+	console.log(information.pieces);
+	//information.pieces="yes";
 	if(information.obtain){
-		$.post( "gameState.php", {waarde:information}, function( data ) {});
+		$.post( "gameState.php", {waarde: JSON.stringify(information)}, function( data ) {});
 	}
 }				//send information to the server
 
@@ -44,6 +46,7 @@ storage = setInterval(function() {
 		$.post( "gameState.php", {waarde:"obtain"}, function( data ) {
 			if(data!="empty"){			//only attempt to update anything if the server had any information to obtain and the information there is a move made by opponent
 				data=$.parseJSON(data);		//convert the obtained information into an object
+				console.log(data[0]['pieces']);
 				if(data[0][0]=="end"){
 					console.log("hallo");
 					clearInterval(storage);
