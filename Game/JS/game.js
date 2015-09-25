@@ -22,7 +22,7 @@ information.selected="";			//keeps track of the currently selected piece (which 
 information.gameStage="setup";		//keeps track of the game stage (setup or main)
 information.stock={ f:1 , b:6 , 1:1 , 2:8 , 3:5 , 4:4 , 5:4 , 6:4 , 7:3 , 8:2 , 9:1 , 10:1};		//the number of available pieces per type
 information.gameState=[];		//the entire game board
-information.currentIds=[];
+information.currentIds=[];		//used to determine which image to use when visually placing piece's on the board
 
 for(i=0;i<10;i++){
 	value=[];
@@ -142,8 +142,8 @@ game.move = function(x,y,x2,y2){
 
 game.select = function(x,y){
 	//$("#x"+x+"y"+y).css("background-color","green");			//colour the newly selected tile
-    if(information.selected!=""){		//if a previous tile was already selected
-		information.gameState[information.selected[0]][information.selected[1]]['revealed']=information.selectMemory;
+   // if(information.selected!=""){		//if a previous tile was already selected
+		//information.gameState[information.selected[0]][information.selected[1]]['revealed']=information.selectMemory;
         /*if(information.selected[0]!=x-1 || information.selected[1]!=y-1){
             if(information.playerNumber==1){
                 $("#x"+(information.selected[0]+1)+"y"+(information.selected[1]+1)).css("background-color","blue");
@@ -152,9 +152,11 @@ game.select = function(x,y){
                 $("#x"+(information.selected[0]+1)+"y"+(information.selected[1]+1)).css("background-color","red")
             }
         }				//change that tiles colour back*/
-    }
+    //}
 	information.selectMemory=information.gameState[x-1][y-1]['revealed'];
 	information.gameState[x-1][y-1]['revealed']="selected";
+	game.examine(information.gameState);
+	information.gameState[x-1][y-1]['revealed']=information.selectMemory;
     information.selected=[x-1,y-1];		//select the new tile	
 }
 
@@ -283,7 +285,8 @@ game.endGame= function(winner){
 	else{
 		$("#win").html("player "+winner+" has won");			
 	}				//display victory message
-    $(".all").css("display","none");			//hide almost everything
+    $(".all").css("display","none");			
+	$("img").css("display","none");				//hide almost everything
 	if(!castBoolean(information.AIgame)){		//if it is a multiplayer game
 		$.post( "gameState.php", {waarde:"end"+winner}, function( data ) {	});		//process the end of the game on the server side
 	}
@@ -292,8 +295,8 @@ game.endGame= function(winner){
 game.examineTile = function(vari,i,i2){
 	id="#x"+(i+1)+"y"+(i1+1)+"b";
     id2="#x"+(i+1)+"y"+(i1+1);			//obtain the id of the div and the span inside it
-	if(information.gameState[i][i2]['owner']!=0 && information.gameState[i][i2]['owner']!=3){
-		if(information.gameState[i][i2]['revealed']=="no" && information.gameState[i][i2]['owner']!=information.playerNumber){
+	if(information.gameState[i][i2]['owner']!=0 && information.gameState[i][i2]['owner']!=3){		//if it is an owned tile...
+		if(information.gameState[i][i2]['revealed']=="no" && information.gameState[i][i2]['owner']!=information.playerNumber){		//if this piece should be hidden...
 			if(information.gameState[i][i2]['owner']==1){
 				$("#bluehidden"+information.currentIds[1]["hidden"]).css("top",39+i2*48).css("left",17+i*48).css("display","block");
 				information.currentIds[1]["hidden"]++;
@@ -301,9 +304,9 @@ game.examineTile = function(vari,i,i2){
 			else{
 				$("#redhidden"+information.currentIds[2]["hidden"]).css("top",39+i2*48).css("left",17+i*48).css("display","block");
 				information.currentIds[2]["hidden"]++;
-			}
+			}			//place a hidden piece image of the right color on the board and change the current id so that the next hidden piece it places isn't the same image
 		}
-		else if(information.gameState[i][i2]['revealed']=="selected"){
+		else if(information.gameState[i][i2]['revealed']=="selected"){			//if it is a selected piece...
 			if(information.gameState[i][i2]['content']=="f"){
 				rank="flag";
 			}
@@ -312,8 +315,8 @@ game.examineTile = function(vari,i,i2){
 			}
 			else{
 				rank=information.gameState[i][i2]['content'];
-			}
-			$("#selected"+rank).css("top",39+i2*48).css("left",17+i*48).css("display","block");
+			}			//get the rank
+			$("#selected"+rank).css("top",39+i2*48).css("left",17+i*48).css("display","block");		//place a selected piece image of the right rank on the board
 		}
 		else{
 			if(information.gameState[i][i2]['owner']==1){
@@ -333,51 +336,16 @@ game.examineTile = function(vari,i,i2){
 			}
 			else{
 				rank=information.gameState[i][i2]['content'];
-			}
-			imageId="#"+color+rank+information.currentIds[information.gameState[i][i2]['owner']][information.gameState[i][i2]['content']];
-			information.currentIds[information.gameState[i][i2]['owner']][information.gameState[i][i2]['content']]++;
-			$(imageId).css("top",39+i2*48).css("left",17+i*48).css("display","block");
+			}			//get rank and color
+			imageId="#"+color+rank+information.currentIds[information.gameState[i][i2]['owner']][information.gameState[i][i2]['content']];		//combine to get imageid
+			information.currentIds[information.gameState[i][i2]['owner']][information.gameState[i][i2]['content']]++;		//increase the current id so this image doesn't get used again (a copy will be used instead)
+			$(imageId).css("top",39+i2*48).css("left",17+i*48).css("display","block");			//place correct image on the board
 		}
 	}
-    /*if(vari[i][i1]['owner']!=information.playerNumber && vari[i][i1]['owner']!=0 && vari[i][i1]['revealed']=="no"){		//if the contents of a tile are supposed to be hidden
-        $(id).html("?");				//display a question mark
-    }
-    else{
-        $(id).html(vari[i][i1]['content']);		//else display the contents of that tile
-    }
-    if(vari[i][i1]['owner']==1){
-        $(id2).css("background-color","blue");
-    }
-    else if(vari[i][i1]['owner']==2){
-        $(id2).css("background-color","red");
-    }
-    else if(vari[i][i1]['owner']==0){
-        $(id2).css("background-color","white");
-    }			//colour the tile depending on the owner*/
 }
 	
 game.examine = function(vari){
-	information.currentIds={1:{"hidden":1,"b":1,"f":1,1:1,2:1,3:1,4:1,5:1,6:1,7:1,8:1,9:1,10:1},2:{"hidden":1,"b":1,"f":1,1:1,2:1,3:1,4:1,5:1,6:1,7:1,8:1,9:1,10:1}};
-    //$("#pieces1").html(information.pieces[0]);
-    //$("#pieces2").html(information.pieces[1]);		//update the pieces beside the board
-	console.log(information.pieces);
-	i=0;
-	i2=0;
-	//console.log(typeof information.pieces[0]);
-	information.pieces[0].forEach(function(element){
-		if(element=="f"){
-			rank="flag";
-		}
-		else if(element=="b"){
-			rank="bomb";
-		}
-		else {
-			rank="element";
-		}
-		$("#blue"+element+information.currentIds[1][element]).css("top",39+i2*48).css("left",517+i*48).css("display","block");
-		information.currentIds[1][element]++;
-		i++;
-	});
+	information.currentIds={1:{"hidden":1,"b":1,"f":1,1:1,2:1,3:1,4:1,5:1,6:1,7:1,8:1,9:1,10:1},2:{"hidden":1,"b":1,"f":1,1:1,2:1,3:1,4:1,5:1,6:1,7:1,8:1,9:1,10:1}};	//create current ids
 	for($i=1;$i<11;$i++){
 		for($i1=1;$i1<9;$i1++){
 			$("#red"+$i+$i1).css("display","none");
@@ -396,7 +364,37 @@ game.examine = function(vari){
 	for($i=1;$<21;$i++){
 		$("#redhidden"+$i).css("display","none");
 		$("#bluehidden"+$i).css("display","none");
-	}
+	}			//hide all images
+	for(i3=0;i3<2;i3++){
+		i=0;
+		i2=0;
+		information.pieces[i3].forEach(function(element){
+			if(i>9){
+				i=0;
+				i2++;
+			}
+			if(element=="f"){
+				rank="flag";
+			}
+			else if(element=="b"){
+				rank="bomb";
+			}
+			else {
+				rank=element;
+			}
+			if(i3==0){
+				color="blue";
+				initial=39;
+			}
+			else{
+				color="red";
+				initial=327;
+			}
+			$("#"+color+element+information.currentIds[i3+1][rank]).css("top",initial+i2*48).css("left",517+i*48).css("display","block");
+			information.currentIds[i3+1][element]++;
+			i++;
+		});
+	}						//visually update the pieces beside the board (piece's which have been defeated)
 	for(i=0;i<10;i++){
 		for(i1=0;i1<10;i1++){
 			game.examineTile(vari,i,i1);

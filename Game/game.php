@@ -45,7 +45,7 @@
         <!-- span doesn't work :( (yet)--->
     </head> 
     <body>
-        <div id="pieces2" class="all" style="height:20px"></div>
+        <!-- <div id="pieces2" class="all" style="height:20px"></div> -->
         <?php
         require "db_config.php";
         session_start();
@@ -155,6 +155,17 @@
 		<img id="blue91" src="Images/blue9.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
 		<img id="blue101" src="Images/blue10.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
 		
+		<img id="selected1" src="Images/selected1.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		<img id="selected2" src="Images/selected2.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		<img id="selected3" src="Images/selected3.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		<img id="selected4" src="Images/selected4.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		<img id="selected5" src="Images/selected5.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		<img id="selected6" src="Images/selected6.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		<img id="selected7" src="Images/selected7.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		<img id="selected8" src="Images/selected8.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		<img id="selected9" src="Images/selected9.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		<img id="selected10" src="Images/selected10.jpg" width="48px" height="48px" style="display:none;position:absolute;"></img>
+		
 		<?php
 		for($i=1;$i<41;$i++){
 			echo "<img id='redhidden$i' src='Images/redhidden.jpg' width='48px' height='48px' style='display:none;position:absolute;'></img>";
@@ -167,7 +178,7 @@
             <span id="name"><?php echo $name; ?></span>
         </div>
         
-        <div id="pieces1" class="all" style="top:530px;position:absolute;"></div>
+       <!-- <div id="pieces1" class="all" style="top:530px;position:absolute;"></div> -->
         
         <div id="dummy"></div>
         <div id='si' style='display:none;top:550px;position:absolute;' class="all">

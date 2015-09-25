@@ -1,17 +1,16 @@
 /*
-this code is supposed to handle almost the entire game apart from the matchmaking system and the server interaction. 
-It is supposed to be in conjunction with game.php where it allows for player interaction with the game. 
-The game board itself is visually represented by a collection of divs with ids that this file makes use of. 
-It is also important to note that these divs contain spans with similar ids. Besides this the code also interacts with
-buttons present in game.php. For now all these buttons are related to the setup stage of the game where the player chooses which piece to place next 
-and can end the setup phase when all pieces are used. 
-This file also gathers a small amount of information from game.php through obtaining the content 
-of divs which contain the player name and the name of the owner of the room.
-For server interaction this file relies on gamestate.php which it uses to submit moves made by a player and retrieve moves made by the other player.
-At the start only the owner is allowed to interact and has to place all of his pieces on his side of the board before ending his setup phase and passing
-it onto the other player which then places his pieces. 
-Pieces are placed by first selecting a piece to place and then clicking a tile to place said piece there. 
-If the tile already contains another piece this piece is removed from the board to be placed again.
+if the AI were to work it would do so as follows: it set up its side of the board completely randomly and then whenever it has to make a move it
+would assign each of the player's pieces a threat value which depends on the following factor:
+	- distance to the AI's flag
+	- rank
+	- nearby AI's pieces defeatable by this piece
+Then, for every player's piece, the AI would look at all its own pieces and determine their ability to deal with the threat the player's piece poses.
+This would be determined by the following factors:
+	- AI's piece's ability to actually defeat that player's piece
+	- distance to player's piece
+Then it would combine the highest ability with the threat and look at all those combinations to determine which move is best taken.
+Now the AI would determine the path the (AI's) piece with the highest ability score (for that particular player's piece) has to take to reach 
+the (player's) piece with the highest combined threat and ability.  It would then execute the move it found.
 */
 AI = new Object();
 		
@@ -58,7 +57,7 @@ game.testSetup = function(){
 		}
 	}
 	game.examine(information.gameState);
-}
+}					//previously used for testing. It set up the players side of the board randomly
 
 AI.placePiece = function(x,y){
 	finished=false;			//used to keep trying to place a random piece until one is finally selected which can be placed (because the AI still has pieces of this type left to place)
@@ -128,7 +127,7 @@ AI.determineAction = function(x,y){
 			}				//if it is a bomb give it a middling threat level
 			else{				//otherwise...
 				AI.threat[x][y]['threat']=parseInt(information.gameState[x][y]['content']);			//give it a threat level equal to its rank
-				AI.threat[x][y]['threat']+= (AI.flagLocation['x'],AI.flagLocation['y'],x,y,"yes");		//if a clear path from this piece to the AI's flag can be found increase its threat level equal to the distance to the flag
+				AI.threat[x][y]['threat']+= AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"yes");		//if a clear path from this piece to the AI's flag can be found increase its threat level equal to the distance to the flag
 				AI.threat[x][y]['threat']+=0.5*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"semi");	//if this piece can fight its way to the AI's flag increase its threat level proportional to the distance to the flag
 				AI.threat[x][y]['threat']+=0.1*AI.findDistance(AI.flagLocation['x'],AI.flagLocation['y'],x,y,"no");		//if no path can be found to the AI's flag increase this piece's threat level proportional to the distance to the flag
 				AI.threat[x][y]['threat']+=AI.surroundingPieces(x,y);		//increase this piece's threat level depending on the AI's pieces in its vicinity (at most two moves away) which it can defeat
@@ -178,7 +177,7 @@ AI.determineAbility = function(x,y,x2,y2){
 		else{
 			ability+=0;
 			AI.abilities.push({"ability":ability,"location":{"x":x2,"y":y2}});
-		}			//depending on wether this piece can defeat, tie with or lose to the target piece increase its ability accordingly (and store both its ability and location)
+		}			//depending on whether this piece can defeat, tie with or lose to the target piece increase its ability accordingly (and store both its ability and location)
 	}
 	else{
 		ability=-100;

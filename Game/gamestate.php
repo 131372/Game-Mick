@@ -12,15 +12,12 @@ if ($data == "obtain") {
         foreach ($result as $row) {
             array_push($ids, $row['id']);
         }
-        $result = query("SELECT move,turn FROM games WHERE id=:max_id", array(":max_id" => max($ids)), $db);
+        $result = query("SELECT move,turn FROM games WHERE id=:max_id", array(":max_id" => max($ids)), $db);		//find the last move made in this game
         foreach ($result as $row) {
-            //echo "'turn':".$row['turn'].",'move':".$row['move'];
-            //if($row['turn']!="jaja"){
-            //}
             $val = "\"" . $row['turn'] . "\"";
             echo "[" . $row['move'];
             echo ",$val]";
-        }
+        }			//echo it together with which player made that move
     } else {
         echo "empty";
     }
@@ -41,7 +38,7 @@ if ($data == "obtain") {
     } else {
         echo "empty";
 		exit;
-    }
+    }			//if the game hasn't ended
     $result = query("SELECT id FROM games WHERE game_id=:game_id and turn=:name", array(":game_id" => $game_id, ":name" => $name), $db);
     if (!empty($result)) {
         $ids = array();
@@ -59,11 +56,11 @@ if ($data == "obtain") {
 	$winner=str_replace("end","",$data);
     query("DELETE FROM games WHERE game_id=:game_id",array(":game_id"=>$game_id),$db);
     query("INSERT INTO games(game_id,turn,move) VALUES (:game_id,:name,:move)",array(":game_id" => $game_id, ":name" => $name, ":move" =>json_encode(array("end",$winner))),$db);
-}
+}					//end the game
 else if($data=="destroy"){
 	query("DELETE FROM games WHERE game_id=:game_id",array(":game_id"=>$game_id),$db);
-}
+}					//destroy all data
 else {
-    query("INSERT INTO games(game_id,turn,move) VALUES (:game_id,:name,:move)", array(":game_id" => $game_id, ":name" => $name, ":move" => json_encode($data)), $db);
-}
+    query("INSERT INTO games(game_id,turn,move) VALUES (:game_id,:name,:move)", array(":game_id" => $game_id, ":name" => $name, ":move" => $data), $db);
+}					//insert move
 ?>
